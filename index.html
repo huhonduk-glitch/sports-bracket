@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>대진표 자동 생성기</title>
+<title>대진표 메이커 · DEOK TT</title>
 <style>
 :root{--primary:#2563eb;--primary-dark:#1d4ed8;--primary-light:#dbeafe;--secondary:#f59e0b;--success:#10b981;--danger:#ef4444;--bg:#f0f4ff;--card:#fff;--text:#1e293b;--text-light:#64748b;--border:#e2e8f0}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -306,10 +306,23 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </style>
 </head>
 <body>
-<div class="header">
-<h1>🏆 대진표 자동 생성기</h1>
-<p>팀 편성 · 리그 · 토너먼트 · 일정 · 점수 기록</p>
+<header class="header">
+<div class="brand">
+<span class="brand-mark"><svg class="brand-icon" viewBox="0 0 40 40" role="img" aria-label="대진표 메이커">
+<rect width="40" height="40" rx="11.5" fill="currentColor" opacity=".16"/>
+<path d="M11.5 12.5h5.6A2.4 2.4 0 0 1 19.5 14.9v10.2a2.4 2.4 0 0 1-2.4 2.4h-5.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.5 20h6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="29.6" cy="20" r="2.6" fill="currentColor"/>
+</svg></span>
+<span class="brand-text">
+<h1>대진표 메이커</h1>
+<p>팀 편성부터 점수 기록까지, 한 곳에서</p>
+</span>
 </div>
+<div class="brand-by"><span class="by-label">made by</span><span class="brand-mark"><svg class="brand-word" viewBox="0 0 118 20" role="img" aria-label="DEOK TT">
+<text x="0" y="15" font-size="14" font-weight="800" letter-spacing="3.2" fill="currentColor" font-family="'Segoe UI','Apple SD Gothic Neo',sans-serif">DEOK TT</text>
+</svg></span></div>
+</header>
 
 <div class="project-bar no-print" id="projectBar">
 <span class="pb-label">대회</span>
@@ -856,8 +869,16 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </div>
 </div>
 <div style="text-align:center;padding:1rem;color:var(--text-light);font-size:.82rem">
-<p>제작: deok tt</p>
-<p>대진표 자동 생성기 ⓒ 2026</p>
+<p style="margin-bottom:.4rem">만든 사람</p>
+<span class="brand-mark credit-mark"><svg class="brand-icon" viewBox="0 0 40 40" role="img" aria-label="대진표 메이커">
+<rect width="40" height="40" rx="11.5" fill="currentColor" opacity=".16"/>
+<path d="M11.5 12.5h5.6A2.4 2.4 0 0 1 19.5 14.9v10.2a2.4 2.4 0 0 1-2.4 2.4h-5.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.5 20h6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="29.6" cy="20" r="2.6" fill="currentColor"/>
+</svg><svg class="brand-word" viewBox="0 0 118 20" role="img" aria-label="DEOK TT">
+<text x="0" y="15" font-size="14" font-weight="800" letter-spacing="3.2" fill="currentColor" font-family="'Segoe UI','Apple SD Gothic Neo',sans-serif">DEOK TT</text>
+</svg></span>
+<p style="margin-top:.4rem">대진표 메이커 ⓒ 2026</p>
 </div>
 </div>
 
@@ -1034,8 +1055,15 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </div>
 
 <footer class="footer">
-<div class="maker">제작: deok tt</div>
-<div class="sub">대진표 자동 생성기 ⓒ 2026</div>
+<span class="brand-mark footer-mark"><svg class="brand-icon" viewBox="0 0 40 40" role="img" aria-label="대진표 메이커">
+<rect width="40" height="40" rx="11.5" fill="currentColor" opacity=".16"/>
+<path d="M11.5 12.5h5.6A2.4 2.4 0 0 1 19.5 14.9v10.2a2.4 2.4 0 0 1-2.4 2.4h-5.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M19.5 20h6.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+<circle cx="29.6" cy="20" r="2.6" fill="currentColor"/>
+</svg><svg class="brand-word" viewBox="0 0 118 20" role="img" aria-label="DEOK TT">
+<text x="0" y="15" font-size="14" font-weight="800" letter-spacing="3.2" fill="currentColor" font-family="'Segoe UI','Apple SD Gothic Neo',sans-serif">DEOK TT</text>
+</svg></span>
+<div class="sub">대진표 메이커 &nbsp;·&nbsp; ⓒ 2026</div>
 </footer>
 <style>
 /* =========================================================
@@ -1445,8 +1473,6 @@ body.dark-mode{
 
 /* ---------- 글자 크기 위계 ---------- */
 body{font-size:1rem;line-height:1.55}
-.header h1{font-size:1.5rem;letter-spacing:-.02em}
-.header p{font-size:.95rem}
 .card{padding:1.35rem 1.25rem}
 .card h2{font-size:1.25rem;margin-bottom:.35rem;letter-spacing:-.01em}
 .card h2+.card-sub{margin-bottom:.9rem}
@@ -1581,6 +1607,56 @@ body.dark-mode .bulk-tools{border-color:#334155}
 .inline-link{color:var(--primary);font-weight:600;text-decoration:underline;cursor:pointer}
 .team-count-line{margin-top:.7rem;font-size:.95rem;color:var(--text-light)}
 .team-count-line strong{color:var(--text);font-size:1.05rem}
+
+/* ===== 브랜드 마크 · 제목 ===== */
+.header{position:relative;padding:1.2rem 1.5rem 1.3rem;
+  background:linear-gradient(135deg,#0d2150 0%,#1b46c4 52%,#2f6df0 100%);
+  box-shadow:0 2px 20px rgba(13,33,80,.3)}
+.brand{display:flex;align-items:center;justify-content:center;gap:.9rem}
+.brand-mark{display:inline-flex;align-items:center;color:#fff;line-height:0}
+.brand-icon{height:44px;width:44px;display:block;flex:0 0 auto}
+.brand-word{height:19px;width:auto;display:block}
+.brand-text{text-align:left}
+.brand-text h1{font-size:1.7rem;font-weight:800;letter-spacing:-.04em;line-height:1.1;margin:0}
+.brand-text p{font-size:.9rem;opacity:.75;margin-top:.2rem;font-weight:500}
+.brand-by{position:absolute;right:1.5rem;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;gap:.5rem;opacity:.62}
+.brand-by .by-label{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:#fff;font-weight:700}
+.brand-by .brand-word{height:16px}
+
+.footer{display:flex;flex-direction:column;align-items:center;gap:.45rem;
+  background:linear-gradient(135deg,#0d2150,#1b46c4);border-top:2px solid rgba(255,255,255,.16)}
+.footer-mark{gap:.6rem}
+.footer .brand-icon{height:30px;width:30px}
+.footer .brand-word{height:17px}
+.footer .sub{opacity:.65;font-size:.85rem;letter-spacing:.02em}
+
+.credit-mark{color:var(--text-light);gap:.55rem}
+.credit-mark .brand-icon{height:30px;width:30px}
+.credit-mark .brand-word{height:16px}
+.award-mark{color:var(--text-light);gap:.5rem;margin-bottom:.6rem}
+.award-mark .brand-icon{height:26px;width:26px}
+.award-mark .brand-word{height:14px}
+
+@media(max-width:1080px){
+  .brand-by{position:static;transform:none;justify-content:center;margin-top:.6rem}
+}
+@media(max-width:768px){
+  .header{padding:.9rem 1rem 1rem}
+  .brand{gap:.7rem}
+  .brand-icon{height:34px;width:34px}
+  .brand-text h1{font-size:1.3rem}
+  .brand-text p{font-size:.8rem}
+  .brand-by{margin-top:.5rem}
+  .brand-by .brand-word{height:14px}
+  .brand-by .by-label{font-size:.62rem}
+}
+@media print{
+  .brand-mark{color:#0d2150!important}
+  .brand-by{display:none!important}
+  .footer{background:none!important;color:#000!important;border-top:1px solid #ccc!important}
+  .footer .sub{color:#000!important;opacity:1}
+}
 
 /* ===== 색 토큰 (다크모드는 값만 바꾸면 전체가 따라옵니다) ===== */
 :root{
@@ -1753,7 +1829,6 @@ body.dark-mode .award-row.bronze{background:#4a2f14;border-color:#c2410c}
 
   .card{padding:1.05rem .95rem}
   .card h2{font-size:1.15rem}
-  .header h1{font-size:1.25rem}
 }
 </style>
 <script>
@@ -2902,7 +2977,7 @@ function captureAndSave(element){var wasDark=document.body.classList.contains('d
 // ===================== QR CODE =====================
 function showQRCode(){if(!state.generated){alert('대진표를 먼저 생성하세요!');return}document.getElementById('qrModal').classList.add('show');var data=generateQRData();drawSimpleQR(data)}
 
-function generateQRData(){var url=window.location.href;if(url.startsWith('file://')){url=gv('tournamentName')+' - '+gv('sportName')+'\n참가: '+state.teams.length+'팀\n\n제작: deok tt'}else{url=url.split('?')[0]+'?view=true'}return url}
+function generateQRData(){var url=window.location.href;if(url.startsWith('file://')){url=gv('tournamentName')+' - '+gv('sportName')+'\n참가: '+state.teams.length+'팀\n\n대진표 메이커 · DEOK TT'}else{url=url.split('?')[0]+'?view=true'}return url}
 
 function drawSimpleQR(data){var canvas=document.getElementById('qrCanvas');var ctx=canvas.getContext('2d');var script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';script.onload=function(){QRCode.toCanvas(canvas,data,{width:250,margin:2,color:{dark:'#1e293b',light:'#ffffff'}},function(error){if(error)drawTextFallback(ctx,canvas)});document.getElementById('qrInfo').innerHTML='<strong>'+gv('tournamentName')+' - '+gv('sportName')+'</strong><br><span style="font-size:.75rem">'+state.teams.length+'팀 | '+state.matchSchedules.length+'경기</span>'};script.onerror=function(){canvas.width=280;canvas.height=280;drawTextFallback(ctx,canvas)};document.head.appendChild(script)}
 
@@ -5140,6 +5215,13 @@ function rankTeamsOfProject(pd){
   return rows.map(x=>x.n);
 }
 
+/* ---------- 브랜드 마크 (외부 파일 없이 그려 넣는 그림) ---------- */
+function brandMarkSVG(){
+  const icon=document.querySelector('.header .brand-icon');
+  const word=document.querySelector('.brand-by .brand-word');
+  return (icon?icon.outerHTML:'')+(word?word.outerHTML:'');
+}
+
 /* ---------- 시상 명단 ---------- */
 function showAwards(){
   if(!state.teams.length){alert('먼저 참가팀을 등록하세요.');return}
@@ -5152,6 +5234,7 @@ function showAwards(){
   const done=state.matches.filter(m=>m.score1!==null&&!m.isBye).length;
   const total=state.matches.filter(m=>!m.isBye&&m.team1!=='BYE'&&m.team2!=='BYE').length;
   let h='<div class="award-sheet">';
+  h+='<span class="brand-mark award-mark">'+brandMarkSVG()+'</span>';
   h+='<h2>'+escHtml(gv('tournamentName'))+'</h2>';
   h+='<div class="as-sub">'+escHtml(gv('sportName'))+' · 시상 명단'+(done<total?' (경기 진행 중 '+done+'/'+total+')':'')+'</div>';
   const medals=[['gold','우승','🥇'],['silver','준우승','🥈'],['bronze','3위','🥉']];

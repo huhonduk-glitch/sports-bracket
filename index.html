@@ -425,14 +425,14 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 <div class="card">
 <h2>팀 나누기 설정</h2>
 <div class="form-row">
-<div class="form-group"><label>팀당 인원 수</label><select id="teamSize"><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option><option value="5" selected>5명</option><option value="6">6명</option><option value="7">7명</option><option value="8">8명</option><option value="9">9명</option><option value="10">10명</option><option value="11">11명</option><option value="12">12명</option><option value="13">13명</option><option value="14">14명</option><option value="15">15명</option><option value="16">16명</option></select></div>
+<div class="form-group"><label>팀당 인원 수</label><select id="teamSize" onchange="updateActionHints()"><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option><option value="5" selected>5명</option><option value="6">6명</option><option value="7">7명</option><option value="8">8명</option><option value="9">9명</option><option value="10">10명</option><option value="11">11명</option><option value="12">12명</option><option value="13">13명</option><option value="14">14명</option><option value="15">15명</option><option value="16">16명</option></select></div>
 <div class="form-group"><label>팀 표시 방식</label><select id="teamDisplayMode"><option value="name">이름으로 표시</option><option value="number">번호로 표시</option><option value="both">번호+이름</option></select></div>
 <div class="form-group"><label>팀 이름 접두사</label><input type="text" id="teamPrefix" value="팀" placeholder="팀, 모둠, 조..."></div>
 </div>
 <div class="form-row">
 <div class="form-group"><label>성별 균형</label><select id="genderBalance"><option value="none">적용 안함</option><option value="balance">균등 배분</option></select></div>
 <div class="form-group"><label>수준 균형</label><select id="levelBalance"><option value="none">적용 안함</option><option value="balance">균등 배분 (상/중/하 골고루)</option></select></div>
-<div class="form-group"><label>나머지 인원 처리</label><select id="remainderMode"><option value="distribute">기존 팀에 분배</option><option value="extra">소수팀 추가 생성</option></select></div>
+<div class="form-group"><label>나머지 인원 처리</label><select id="remainderMode" onchange="updateActionHints()"><option value="distribute">기존 팀에 분배</option><option value="extra">소수팀 추가 생성</option></select></div>
 </div>
 <p class="card-sub">수준 균형을 켜면 각 팀에 상·중·하가 골고루 섞여 팀 간 실력차가 줄어듭니다.</p>
 </div>
@@ -557,7 +557,7 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 <div class="form-group"><label>하루 최대</label><input type="number" id="maxMatchesPerDay" value="10" min="1" onchange="autoSave()"></div>
 <div class="form-group"><label>코트 수</label><input type="number" id="courtCount" value="1" min="1" max="10" onchange="autoSave()"></div>
 </div>
-<div class="form-group"><label>경기장 이름(쉼표)</label><input type="text" id="courtNames" value="메인코트" onchange="autoSave()"></div>
+<div class="form-group"><label>경기장 이름</label><input type="text" id="courtNames" value="메인코트" placeholder="비우면 코트 1, 코트 2…로 자동" onchange="autoSave()"><span class="hint-text">쉼표로 구분해서 적으세요. 비워 두거나 코트 수보다 적게 적으면 나머지는 자동으로 이름이 붙습니다.</span></div>
 </div>
 <div id="scheduleModeWeekday" class="hidden">
 <div class="info-box">💡 체육 수업이 있는 요일을 선택하면, 해당 요일에만 경기가 배정됩니다!</div>
@@ -580,7 +580,7 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </div>
 <div class="form-row">
 <div class="form-group"><label>코트 수</label><input type="number" id="courtCountW" value="1" min="1" max="10" onchange="autoSave()"></div>
-<div class="form-group"><label>경기장 이름(쉼표)</label><input type="text" id="courtNamesW" value="메인코트" onchange="autoSave()"></div>
+<div class="form-group"><label>경기장 이름</label><input type="text" id="courtNamesW" value="메인코트" placeholder="비우면 코트 1, 코트 2…로 자동" onchange="autoSave()"><span class="hint-text">쉼표로 구분해서 적으세요. 비워 두거나 코트 수보다 적게 적으면 나머지는 자동으로 이름이 붙습니다.</span></div>
 </div>
 </div>
 <div id="scheduleModeCustom" class="hidden">
@@ -598,7 +598,7 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </div>
 <div class="form-row">
 <div class="form-group"><label>코트 수</label><input type="number" id="courtCountC" value="1" min="1" max="10" onchange="autoSave()"></div>
-<div class="form-group"><label>경기장 이름(쉼표)</label><input type="text" id="courtNamesC" value="메인코트" onchange="autoSave()"></div>
+<div class="form-group"><label>경기장 이름</label><input type="text" id="courtNamesC" value="메인코트" placeholder="비우면 코트 1, 코트 2…로 자동" onchange="autoSave()"><span class="hint-text">쉼표로 구분해서 적으세요. 비워 두거나 코트 수보다 적게 적으면 나머지는 자동으로 이름이 붙습니다.</span></div>
 </div>
 </div>
 </div>
@@ -861,9 +861,10 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </div>
 </div>
 <div style="text-align:center;padding:1rem;color:var(--text-light);font-size:.82rem">
-<p style="margin-bottom:.4rem">만든 사람</p>
+<p style="margin-bottom:.5rem">만든 사람</p>
 <span class="brand-mark credit-mark"><img class="brand-icon" src="data:image/jpeg;base64,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" alt="SPORTS BRACKET" width="160" height="160"></span>
-<p style="margin-top:.4rem">SPORTS BRACKET · 스포츠 대진표 생성기 ⓒ 2026</p>
+<p style="margin-top:.5rem;font-weight:800;font-size:1rem;letter-spacing:.12em;color:var(--text)">DEOK TT</p>
+<p style="margin-top:.2rem">SPORTS BRACKET · 스포츠 대진표 생성기 ⓒ 2026</p>
 </div>
 </div>
 
@@ -1040,8 +1041,18 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 </div>
 
 <footer class="footer">
+<div class="footer-inner">
 <span class="brand-mark footer-mark"><img class="brand-icon" src="data:image/jpeg;base64,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" alt="SPORTS BRACKET" width="160" height="160"></span>
-<div class="sub">SPORTS BRACKET &nbsp;·&nbsp; 스포츠 대진표 생성기 &nbsp;·&nbsp; ⓒ 2026</div>
+<div class="footer-text">
+<div class="ft-title">SPORTS BRACKET</div>
+<div class="ft-sub">스포츠 대진표 생성기</div>
+</div>
+<div class="footer-maker">
+<span class="fm-label">만든 사람</span>
+<span class="fm-name">DEOK TT</span>
+</div>
+</div>
+<div class="footer-copy">ⓒ 2026 DEOK TT</div>
 </footer>
 <style>
 /* =========================================================
@@ -1599,11 +1610,25 @@ body.dark-mode .bulk-tools{border-color:#334155}
   text-transform:uppercase}
 .brand-text p{font-size:.92rem;opacity:.72;margin-top:.35rem;font-weight:500;letter-spacing:.02em}
 
-.footer{display:flex;flex-direction:column;align-items:center;gap:.55rem;
+.footer{display:flex;flex-direction:column;align-items:center;gap:.7rem;padding:1.4rem 1.5rem;
   background:linear-gradient(135deg,#0b1533,#1f3f8f);border-top:2px solid rgba(255,255,255,.16)}
-.footer .brand-icon{height:36px;width:36px;border-radius:9px}
-.footer .sub{opacity:.68;font-size:.85rem;letter-spacing:.02em}
-
+.footer-inner{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:center}
+.footer .brand-icon{height:40px;width:40px;border-radius:10px;
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.22),0 3px 10px rgba(0,0,0,.3)}
+.footer-text{text-align:left;line-height:1.3}
+.ft-title{font-size:1rem;font-weight:800;letter-spacing:.1em}
+.ft-sub{font-size:.85rem;opacity:.7}
+.footer-maker{display:flex;align-items:center;gap:.5rem;padding:.4rem .9rem;
+  border:1px solid rgba(255,255,255,.28);border-radius:99px;background:rgba(255,255,255,.07)}
+.fm-label{font-size:.72rem;opacity:.7;letter-spacing:.02em}
+.fm-name{font-size:.95rem;font-weight:800;letter-spacing:.14em}
+.footer-copy{font-size:.78rem;opacity:.55;letter-spacing:.02em}
+@media(max-width:768px){
+  .footer{padding:1.2rem 1rem}
+  .footer-inner{gap:.75rem}
+  .footer-text{text-align:center}
+  .ft-title{font-size:.92rem}
+}
 .credit-mark .brand-icon{height:48px;width:48px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 .award-mark{margin-bottom:.6rem}
 .award-mark .brand-icon{height:36px;width:36px;border-radius:9px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
@@ -2023,12 +2048,40 @@ function updateProjectUI(){document.getElementById('projectNameDisplay').textCon
 function switchTab(t){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[data-tab="${t}"]`).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});updateActionHints();updateStepProgress();if(t==='scoreboard'){initScoreboards();renderNextMatchCard()}if(t==='dashboard')renderDashboard();showEmptyGuides()}
 
 // 하단 실행 버튼 옆 안내 문구를 현재 상태에 맞게 갱신
+// 지금 설정대로 나누면 몇 팀이 되고, 각 팀 인원이 몇 명인지 미리 계산한다
+function planTeamSizes(){
+  const n=state.students.length;
+  const size=parseInt(gv('teamSize'))||5;
+  if(n<2)return null;
+  const extra=gv('remainderMode')==='extra';
+  if(extra){
+    const sizes=[];
+    for(let i=0;i<n;i+=size)sizes.push(Math.min(size,n-i));
+    return {n:n,size:size,sizes:sizes};
+  }
+  let c=Math.floor(n/size);
+  if(c<1)c=1;
+  const base=Math.floor(n/c),rem=n%c;
+  const sizes=[];
+  for(let i=0;i<c;i++)sizes.push(base+(i<rem?1:0));
+  return {n:n,size:size,sizes:sizes};
+}
+
 function updateActionHints(){
   const t=document.getElementById('teamActionHint');
   if(t){
-    const n=state.students.length;
-    t.textContent = n<2 ? '학생을 2명 이상 등록하면 팀을 나눌 수 있습니다'
-      : '등록된 '+n+'명을 팀당 '+(gv('teamSize')||5)+'명씩 나눕니다';
+    const plan=planTeamSizes();
+    if(!plan){
+      t.textContent='학생을 2명 이상 등록하면 팀을 나눌 수 있습니다';
+    }else{
+      const c=plan.sizes.length;
+      const uniform=plan.sizes.every(x=>x===plan.sizes[0]);
+      let detail;
+      if(uniform)detail='각 팀 '+plan.sizes[0]+'명';
+      else if(c<=6)detail=plan.sizes.join('명 · ')+'명';
+      else detail=Math.min.apply(null,plan.sizes)+'~'+Math.max.apply(null,plan.sizes)+'명씩';
+      t.textContent='학생 '+plan.n+'명 · 팀당 '+plan.size+'명 기준 → '+c+'팀 ('+detail+')';
+    }
   }
   const b=document.getElementById('setupActionHint');
   if(b){
@@ -2436,6 +2489,14 @@ function buildSeedOrder(size){
 function nextPow2(n){let p=1;while(p<n)p*=2;return p}
 
 // 날짜를 YYYY-MM-DD 문자열로 (한국 시간 기준. toISOString을 쓰면 하루가 밀린다)
+// 경기장(코트) 이름 목록. 비워 두거나 개수가 모자라면 '코트 1, 코트 2…'로 자동 채운다
+function getCourtNames(raw,count){
+  const c=Math.max(1,parseInt(count)||1);
+  const list=String(raw||'').split(',').map(x=>x.trim()).filter(x=>x);
+  while(list.length<c)list.push('코트 '+(list.length+1));
+  return list.slice(0,c);
+}
+
 function toDateStr(d){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
@@ -2489,7 +2550,7 @@ if(state.format==='group' && state.groups){
   return generateGroupSchedule(pl);
 }
 
-if(scheduleMode==='continuous'){const sd=gv('startDate'),st=gv('startTime'),dur=parseInt(gv('matchDuration'))||30,brk=parseInt(gv('breakTime'))||10,mpd=parseInt(gv('maxMatchesPerDay'))||10,cc=parseInt(gv('courtCount'))||1;const cn=gv('courtNames').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));let cd=parseDateStr(sd);const[sH,sM]=st.split(':').map(Number);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:toDateStr(cd),time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='weekday'){const sd=gv('startDateW'),st=gv('startTimeW'),dur=parseInt(gv('matchDurationW'))||30,brk=parseInt(gv('breakTimeW'))||10,mpd=parseInt(gv('maxMatchesPerDayW'))||10,cc=parseInt(gv('courtCountW'))||1;const cn=gv('courtNamesW').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));const weekdays=getSelectedWeekdays();if(weekdays.length===0){alert('체육 수업 요일을 선택하세요!');return}let cd=parseDateStr(sd);const[sH,sM]=st.split(':').map(Number);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:toDateStr(cd),time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='custom'){if(customDates.length===0){alert('경기 날짜를 추가하세요!');return}const dur=parseInt(gv('matchDurationC'))||30,brk=parseInt(gv('breakTimeC'))||10,mpd=parseInt(gv('maxMatchesPerDayC'))||10,cc=parseInt(gv('courtCountC'))||1;const cn=gv('courtNamesC').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));let di=0,md=0,ci=0;let[sH,sM]=(customDates[0].time||'09:00').split(':').map(Number);let cm=sH*60+sM;pl.forEach(m=>{if(md>=mpd){di++;if(di>=customDates.length)di=customDates.length-1;[sH,sM]=(customDates[di].time||'09:00').split(':').map(Number);cm=sH*60+sM;md=0;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:customDates[di].date,time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}
+if(scheduleMode==='continuous'){const sd=gv('startDate'),st=gv('startTime'),dur=parseInt(gv('matchDuration'))||30,brk=parseInt(gv('breakTime'))||10,mpd=parseInt(gv('maxMatchesPerDay'))||10,cc=parseInt(gv('courtCount'))||1;const cn=getCourtNames(gv('courtNames'),cc);let cd=parseDateStr(sd);const[sH,sM]=st.split(':').map(Number);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:toDateStr(cd),time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='weekday'){const sd=gv('startDateW'),st=gv('startTimeW'),dur=parseInt(gv('matchDurationW'))||30,brk=parseInt(gv('breakTimeW'))||10,mpd=parseInt(gv('maxMatchesPerDayW'))||10,cc=parseInt(gv('courtCountW'))||1;const cn=getCourtNames(gv('courtNamesW'),cc);const weekdays=getSelectedWeekdays();if(weekdays.length===0){alert('체육 수업 요일을 선택하세요!');return}let cd=parseDateStr(sd);const[sH,sM]=st.split(':').map(Number);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:toDateStr(cd),time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='custom'){if(customDates.length===0){alert('경기 날짜를 추가하세요!');return}const dur=parseInt(gv('matchDurationC'))||30,brk=parseInt(gv('breakTimeC'))||10,mpd=parseInt(gv('maxMatchesPerDayC'))||10,cc=parseInt(gv('courtCountC'))||1;const cn=getCourtNames(gv('courtNamesC'),cc);let di=0,md=0,ci=0;let[sH,sM]=(customDates[0].time||'09:00').split(':').map(Number);let cm=sH*60+sM;pl.forEach(m=>{if(md>=mpd){di++;if(di>=customDates.length)di=customDates.length-1;[sH,sM]=(customDates[di].time||'09:00').split(':').map(Number);cm=sH*60+sM;md=0;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:customDates[di].date,time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}
 renderSchedule()}
 
 
@@ -3635,7 +3696,7 @@ function generateGroupSchedule(pl){
     brk=parseInt(gv('breakTime'))||10;
     mpd=parseInt(gv('maxMatchesPerDay'))||10;
     cc=parseInt(gv('courtCount'))||1;
-    cn=gv('courtNames').split(',').map(s=>s.trim()).filter(Boolean);
+    cn=getCourtNames(gv('courtNames'),cc);
   }else if(scheduleMode==='weekday'){
     sd=gv('startDateW');
     stTime=gv('startTimeW');
@@ -3643,7 +3704,7 @@ function generateGroupSchedule(pl){
     brk=parseInt(gv('breakTimeW'))||10;
     mpd=parseInt(gv('maxMatchesPerDayW'))||10;
     cc=parseInt(gv('courtCountW'))||1;
-    cn=gv('courtNamesW').split(',').map(s=>s.trim()).filter(Boolean);
+    cn=getCourtNames(gv('courtNamesW'),cc);
   }else{
     sd=customDates.length>0?customDates[0].date:'2026-04-20';
     stTime=customDates.length>0?customDates[0].time:'09:00';
@@ -3651,10 +3712,9 @@ function generateGroupSchedule(pl){
     brk=parseInt(gv('breakTimeC'))||10;
     mpd=parseInt(gv('maxMatchesPerDayC'))||10;
     cc=parseInt(gv('courtCountC'))||1;
-    cn=gv('courtNamesC').split(',').map(s=>s.trim()).filter(Boolean);
+    cn=getCourtNames(gv('courtNamesC'),cc);
   }
 
-  while(cn.length<cc) cn.push('코트 '+(cn.length+1));
 
   const weekdays=(scheduleMode==='weekday')?getSelectedWeekdays():null;
   if(scheduleMode==='weekday'&&(!weekdays||weekdays.length===0)){
@@ -4318,7 +4378,7 @@ function getScheduleReorderConfig(){
     brk = parseInt(gv('breakTime')) || 10;
     mpd = parseInt(gv('maxMatchesPerDay')) || 10;
     cc = parseInt(gv('courtCount')) || 1;
-    cn = gv('courtNames').split(',').map(s=>s.trim()).filter(Boolean);
+    cn = getCourtNames(gv('courtNames'),cc);
   }else if(scheduleMode === 'weekday'){
     sd = gv('startDateW');
     stTime = gv('startTimeW') || '09:00';
@@ -4326,7 +4386,7 @@ function getScheduleReorderConfig(){
     brk = parseInt(gv('breakTimeW')) || 10;
     mpd = parseInt(gv('maxMatchesPerDayW')) || 10;
     cc = parseInt(gv('courtCountW')) || 1;
-    cn = gv('courtNamesW').split(',').map(s=>s.trim()).filter(Boolean);
+    cn = getCourtNames(gv('courtNamesW'),cc);
     weekdays = getSelectedWeekdays();
 
     if(!weekdays || weekdays.length === 0){
@@ -4345,10 +4405,9 @@ function getScheduleReorderConfig(){
     brk = parseInt(gv('breakTimeC')) || 10;
     mpd = parseInt(gv('maxMatchesPerDayC')) || 10;
     cc = parseInt(gv('courtCountC')) || 1;
-    cn = gv('courtNamesC').split(',').map(s=>s.trim()).filter(Boolean);
+    cn = getCourtNames(gv('courtNamesC'),cc);
   }
 
-  while(cn.length < cc) cn.push('코트 ' + (cn.length+1));
 
   return {sd, stTime, dur, brk, mpd, cc, cn, weekdays};
 }

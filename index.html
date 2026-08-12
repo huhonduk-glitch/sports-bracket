@@ -647,7 +647,7 @@ body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,
 <p class="card-sub">코트별로 점수를 올리고, 경기가 끝나면 결과 확정을 누르세요.</p>
 <div class="form-row">
 <div class="form-group"><label>동시 운영 코트 수</label>
-<select id="sbCourtCount" onchange="initScoreboards()">
+<select id="sbCourtCount" onchange="initScoreboards();autoSave()">
 <option value="1">1코트</option><option value="2">2코트</option><option value="3">3코트</option>
 <option value="4">4코트</option><option value="5">5코트</option><option value="6">6코트</option>
 </select></div>
@@ -1587,19 +1587,70 @@ let scheduleDragIndex = null;
 
 // ===================== PROJECT =====================
 function getAllProjects(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||{}}catch{return{}}}
-function saveAllProjects(p){localStorage.setItem(STORAGE_KEY,JSON.stringify(p))}
+let saveFailedNotified=false;
+function markSaveState(ok){
+  const si=document.getElementById('saveIndicator');
+  if(!si)return;
+  if(ok){si.textContent='저장됨';si.className='save-indicator'}
+  else{si.textContent='저장 안 됨! 백업하세요';si.className='save-indicator unsaved'}
+}
+function saveAllProjects(p){
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(p));
+    markSaveState(true);
+    saveFailedNotified=false;
+    return true;
+  }catch(e){
+    markSaveState(false);
+    if(!saveFailedNotified){
+      saveFailedNotified=true;
+      alert('저장에 실패했습니다.\n\n브라우저 저장 공간이 가득 찼거나, 저장이 차단된 상태입니다.\n지금 만든 내용이 사라질 수 있습니다.\n\n① 위쪽 [백업 저장] 버튼을 눌러 파일로 보관하세요.\n② 쓰지 않는 대회를 [대회 삭제]로 지우면 공간이 생깁니다.');
+    }
+    return false;
+  }
+}
 function getActiveId(){return localStorage.getItem(ACTIVE_KEY)}
 function setActiveId(id){localStorage.setItem(ACTIVE_KEY,id)}
 function gv(id){const el=document.getElementById(id);return el?el.value:''}
 function sv(id,val){const el=document.getElementById(id);if(el&&val!=null)el.value=val}
 
-function autoSave(){if(!state.id)return;const p=getAllProjects();state.settings=gatherSettings();state.name=gv('tournamentName')+' - '+gv('sportName');p[state.id]={id:state.id,name:state.name,format:state.format,scoreType:state.scoreType,teams:state.teams,matches:state.matches,groups:state.groups,leagueResults:state.leagueResults,matchSchedules:state.matchSchedules,settings:state.settings,generated:state.generated,students:state.students,conditions:state.conditions,generatedTeams:state.generatedTeams,matchEvents:state.matchEvents,savedAt:new Date().toISOString()};saveAllProjects(p);setActiveId(state.id);updateProjectUI();const si=document.getElementById('saveIndicator');if(si){si.textContent='저장됨';si.className='save-indicator'}}
+function autoSave(){if(!state.id)return;const p=getAllProjects();state.settings=gatherSettings();state.name=gv('tournamentName')+' - '+gv('sportName');p[state.id]={id:state.id,name:state.name,format:state.format,scoreType:state.scoreType,teams:state.teams,matches:state.matches,groups:state.groups,leagueResults:state.leagueResults,matchSchedules:state.matchSchedules,settings:state.settings,generated:state.generated,students:state.students,conditions:state.conditions,generatedTeams:state.generatedTeams,matchEvents:state.matchEvents,scoreboardStates:scoreboardStates,sbCourtCount:gv('sbCourtCount'),savedAt:new Date().toISOString()};saveAllProjects(p);setActiveId(state.id);updateProjectUI()}
 
-function newProject(){const n=prompt('새 대회 이름:','새 대회');if(!n)return;state={id:'proj_'+Date.now(),name:n,format:'tournament',scoreType:'single',teams:[],matches:[],groups:null,leagueResults:{},matchSchedules:[],settings:{},generated:false,sbScores:[0,0],currentScoreMatch:null,timerSeconds:0,timerRunning:false,scheduleView:'list',students:[],conditions:[],generatedTeams:[],matchEvents:[]};manualByeTeams=[];sv('tournamentName',n);sv('sportName','');setFormatSilent('tournament');setScoreTypeSilent('single');renderTeams();renderStudents();renderConditions();document.getElementById('bracketArea').innerHTML='';document.getElementById('scheduleArea').innerHTML='';document.getElementById('teamResultArea').innerHTML='';autoSave();refreshProjectList();switchTab('teammaker')}
+function newProject(){const n=prompt('새 대회 이름:','새 대회');if(!n)return;state={id:'proj_'+Date.now(),name:n,format:'tournament',scoreType:'single',teams:[],matches:[],groups:null,leagueResults:{},matchSchedules:[],settings:{},generated:false,sbScores:[0,0],currentScoreMatch:null,timerSeconds:0,timerRunning:false,scheduleView:'list',students:[],conditions:[],generatedTeams:[],matchEvents:[]};manualByeTeams=[];customDates=[];Object.keys(timerIntervals).forEach(k=>clearInterval(timerIntervals[k]));timerIntervals={};scoreboardStates={};sv('tournamentName',n);sv('sportName','');setFormatSilent('tournament');setScoreTypeSilent('single');renderTeams();renderStudents();renderConditions();document.getElementById('bracketArea').innerHTML='';document.getElementById('scheduleArea').innerHTML='';document.getElementById('teamResultArea').innerHTML='';autoSave();refreshProjectList();switchTab('teammaker')}
 
-function loadProject(){const id=gv('projectSelect');if(!id)return;const p=getAllProjects()[id];if(!p)return;state.id=p.id;state.name=p.name;state.format=p.format||'tournament';state.scoreType=p.scoreType||'single';state.teams=p.teams||[];state.matches=p.matches||[];state.groups=p.groups||null;state.leagueResults=p.leagueResults||{};state.matchSchedules=p.matchSchedules||[];state.generated=p.generated||false;state.settings=p.settings||{};state.students=p.students||[];state.conditions=p.conditions||[];state.generatedTeams=p.generatedTeams||[];state.matchEvents=p.matchEvents||[];state.sbScores=[0,0];state.currentScoreMatch=null;applySettings(state.settings);renderTeams();renderStudents();renderConditions();if(state.generatedTeams.length)renderTeamResults();if(state.generated){if(state.format==='tournament')renderTournamentFromState();else if(state.format==='league')renderLeague();else renderGroupStage();renderSchedule();populateScoreboardSelects()}setActiveId(id);updateProjectUI()}
+function loadProject(){const id=gv('projectSelect');if(!id)return;const p=getAllProjects()[id];if(!p)return;state.id=p.id;state.name=p.name;state.format=p.format||'tournament';state.scoreType=p.scoreType||'single';state.teams=p.teams||[];state.matches=p.matches||[];state.groups=p.groups||null;state.leagueResults=p.leagueResults||{};state.matchSchedules=p.matchSchedules||[];state.generated=p.generated||false;state.settings=p.settings||{};state.students=p.students||[];state.conditions=p.conditions||[];state.generatedTeams=p.generatedTeams||[];state.matchEvents=p.matchEvents||[];state.sbScores=[0,0];state.currentScoreMatch=null;
+Object.keys(timerIntervals).forEach(k=>clearInterval(timerIntervals[k]));timerIntervals={};
+scoreboardStates=p.scoreboardStates||{};
+Object.keys(scoreboardStates).forEach(k=>{if(scoreboardStates[k])scoreboardStates[k].timerRunning=false});
+if(p.sbCourtCount)sv('sbCourtCount',p.sbCourtCount);
+applySettings(state.settings);renderTeams();renderStudents();renderConditions();if(state.generatedTeams.length)renderTeamResults();if(state.generated){if(state.format==='tournament')renderTournamentFromState();else if(state.format==='league')renderLeague();else renderGroupStage();renderSchedule();populateScoreboardSelects()}setActiveId(id);updateProjectUI()}
 
-function deleteProject(){if(!state.id){alert('선택된 프로젝트 없음');return}if(!confirm(`"${state.name}" 삭제?`))return;const p=getAllProjects();delete p[state.id];saveAllProjects(p);state.id=null;refreshProjectList();updateProjectUI()}
+function deleteProject(){
+  if(!state.id){alert('선택된 대회가 없습니다.');return}
+  if(!confirm('"'+state.name+'" 대회를 삭제할까요?\n\n이 대회의 팀·대진표·일정·기록이 모두 사라집니다.\n되돌릴 수 없습니다.'))return;
+  const p=getAllProjects();
+  delete p[state.id];
+  saveAllProjects(p);
+  // 삭제 후에도 계속 쓸 수 있도록 빈 대회를 새로 연다
+  resetToBlankProject();
+  refreshProjectList();
+  alert('삭제했습니다. 새 대회를 시작할 수 있습니다.');
+}
+
+// 화면과 상태를 빈 대회로 초기화한다 (저장은 계속 동작)
+function resetToBlankProject(){
+  state={id:'proj_'+Date.now(),name:'새 대회',format:'tournament',scoreType:'single',teams:[],matches:[],groups:null,leagueResults:{},matchSchedules:[],settings:{},generated:false,sbScores:[0,0],currentScoreMatch:null,timerSeconds:0,timerRunning:false,scheduleView:'list',students:[],conditions:[],generatedTeams:[],matchEvents:[]};
+  manualByeTeams=[];customDates=[];
+  Object.keys(timerIntervals).forEach(k=>clearInterval(timerIntervals[k]));
+  timerIntervals={};scoreboardStates={};
+  sv('tournamentName','새 대회');sv('sportName','');
+  setFormatSilent('tournament');setScoreTypeSilent('single');
+  renderTeams();renderStudents();renderConditions();renderCustomDates();
+  ['bracketArea','scheduleArea','teamResultArea','scoreboardArea','dashContent'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.innerHTML='';
+  });
+  updateProjectUI();updateActionHints();
+}
 
 function exportProject(){if(!state.id){alert('프로젝트를 먼저 만드세요!');return}autoSave();const d=getAllProjects()[state.id];if(!d)return;const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`${state.name||'bracket'}.json`;a.click()}
 
@@ -1719,39 +1770,56 @@ function resetResults(){if(!confirm('초기화?'))return;state.leagueResults={};
 // ===================== TOURNAMENT =====================
 function generateTournament(){
 const teams=[...state.teams];
-const sc=parseInt(gv('seedCount'))||0;
-const byeMode=gv('byeAssign')||'random';
 const ts=nextPow2(teams.length);
+const byeMode=gv('byeAssign')||'random';
 const byeCount=ts-teams.length;
-const arr=new Array(ts).fill(null);
-if(sc>0){
-const seeds=teams.filter(t=>t.seed>0).sort((a,b)=>a.seed-b.seed);
-const ns=teams.filter(t=>!t.seed);
-for(let i=ns.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ns[i],ns[j]]=[ns[j],ns[i]]}
-const sp=getSeedPos(ts,sc);seeds.forEach((s,i)=>{if(i<sp.length)arr[sp[i]]=s});
-let ni=0;for(let i=0;i<ts;i++){if(!arr[i]&&ni<ns.length)arr[i]=ns[ni++]}
-}else if(byeMode==='manual'&&manualByeTeams.length>0&&byeCount>0){
-let byeTeams=teams.filter(t=>manualByeTeams.includes(t.name));
-let nonByeTeams=teams.filter(t=>!manualByeTeams.includes(t.name));
-for(let i=nonByeTeams.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[nonByeTeams[i],nonByeTeams[j]]=[nonByeTeams[j],nonByeTeams[i]]}
-for(let i=byeTeams.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[byeTeams[i],byeTeams[j]]=[byeTeams[j],byeTeams[i]]}
-let slotIdx=ts-1;
-byeTeams.forEach(bt=>{
-  const pairStart=slotIdx-(slotIdx%2);
-  arr[pairStart]=bt;
-  slotIdx=pairStart-2;
-});
-let ni=0;
-for(let i=0;i<ts;i++){if(!arr[i]&&ni<nonByeTeams.length)arr[i]=nonByeTeams[ni++]}
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+// 1) 팀에 순번을 매긴다. 앞 순번일수록 부전승(첫 경기 없이 다음 라운드 직행)을 받는다.
+const seeded=teams.filter(t=>t.seed>0).sort((a,b)=>a.seed-b.seed);
+let rest=shuffle(teams.filter(t=>!t.seed));
+let ordered;
+if(byeMode==='manual'&&manualByeTeams.length>0&&byeCount>0){
+  // 직접 고른 부전승 팀을 맨 앞으로 보낸다
+  const picked=teams.filter(t=>manualByeTeams.includes(t.name));
+  const others=teams.filter(t=>!manualByeTeams.includes(t.name));
+  const othersSeeded=others.filter(t=>t.seed>0).sort((a,b)=>a.seed-b.seed);
+  ordered=[...shuffle(picked),...othersSeeded,...shuffle(others.filter(t=>!t.seed))];
 }else{
-let shuffled=[...teams];
-for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]}
-shuffled.forEach((t,i)=>arr[i]=t);
+  ordered=[...seeded,...rest];
 }
+
+// 2) 표준 대진 순서(1번 자리와 마지막 자리가 맞붙는 방식)를 만든다.
+//    이렇게 하면 부전승이 대진표 곳곳에 골고루 흩어지고,
+//    "양쪽 모두 빈 경기"가 생기지 않는다.
+const slotOrder=buildSeedOrder(ts);
+const arr=slotOrder.map(n=>n<=ordered.length?ordered[n-1]:null);
+
 buildTMatches(arr,ts);renderTournamentFromState()}
 
+// 대진표 자리 순서 만들기: 8팀이면 [1,8,5,4,3,6,7,2]
+function buildSeedOrder(size){
+  let arr=[1];
+  while(arr.length<size){
+    const n=arr.length*2;
+    const next=[];
+    arr.forEach(v=>{next.push(v);next.push(n+1-v)});
+    arr=next;
+  }
+  return arr;
+}
+
 function nextPow2(n){let p=1;while(p<n)p*=2;return p}
-function getSeedPos(t,s){if(s>=4)return[0,t-1,Math.floor(t/2),Math.floor(t/2)-1];if(s>=2)return[0,t-1];return[0]}
+
+// 날짜를 YYYY-MM-DD 문자열로 (한국 시간 기준. toISOString을 쓰면 하루가 밀린다)
+function toDateStr(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// YYYY-MM-DD 문자열을 그 날 자정(현지 시각)으로
+function parseDateStr(str){
+  const p=String(str||'').split('-').map(Number);
+  return new Date(p[0]||2026,(p[1]||1)-1,p[2]||1);
+}
 
 function buildTMatches(slots,ts){const rounds=Math.log2(ts);let id=1,cur=[];for(let i=0;i<ts;i+=2){const t1=slots[i],t2=slots[i+1];const bye=!t1||!t2;const m={id:id++,round:0,team1:t1?t1.name:'BYE',team2:t2?t2.name:'BYE',score1:null,score2:null,setScores:null,winner:null,isBye:bye,nextMatchId:null};if(bye)m.winner=t1?t1.name:(t2?t2.name:null);cur.push(m);state.matches.push(m)}for(let r=1;r<rounds;r++){const prev=cur;cur=[];for(let i=0;i<prev.length;i+=2){const m={id:id++,round:r,team1:prev[i].winner||'?',team2:(prev[i+1]&&prev[i+1].winner)||'?',score1:null,score2:null,setScores:null,winner:null,isBye:false,nextMatchId:null};prev[i].nextMatchId=m.id;if(prev[i+1])prev[i+1].nextMatchId=m.id;cur.push(m);state.matches.push(m)}}if(gv('thirdPlace')==='yes'&&rounds>=2)state.matches.push({id:id++,round:rounds-1,team1:'?',team2:'?',score1:null,score2:null,setScores:null,winner:null,isBye:false,isThirdPlace:true,nextMatchId:null})}
 
@@ -1797,7 +1865,7 @@ if(state.format==='group' && state.groups){
   return generateGroupSchedule(pl);
 }
 
-if(scheduleMode==='continuous'){const sd=gv('startDate'),st=gv('startTime'),dur=parseInt(gv('matchDuration'))||30,brk=parseInt(gv('breakTime'))||10,mpd=parseInt(gv('maxMatchesPerDay'))||10,cc=parseInt(gv('courtCount'))||1;const cn=gv('courtNames').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));let cd=new Date(sd);const[sH,sM]=st.split(':').map(Number);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:cd.toISOString().split('T')[0],time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='weekday'){const sd=gv('startDateW'),st=gv('startTimeW'),dur=parseInt(gv('matchDurationW'))||30,brk=parseInt(gv('breakTimeW'))||10,mpd=parseInt(gv('maxMatchesPerDayW'))||10,cc=parseInt(gv('courtCountW'))||1;const cn=gv('courtNamesW').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));const weekdays=getSelectedWeekdays();if(weekdays.length===0){alert('체육 수업 요일을 선택하세요!');return}let cd=new Date(sd);const[sH,sM]=st.split(':').map(Number);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:cd.toISOString().split('T')[0],time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='custom'){if(customDates.length===0){alert('경기 날짜를 추가하세요!');return}const dur=parseInt(gv('matchDurationC'))||30,brk=parseInt(gv('breakTimeC'))||10,mpd=parseInt(gv('maxMatchesPerDayC'))||10,cc=parseInt(gv('courtCountC'))||1;const cn=gv('courtNamesC').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));let di=0,md=0,ci=0;let[sH,sM]=(customDates[0].time||'09:00').split(':').map(Number);let cm=sH*60+sM;pl.forEach(m=>{if(md>=mpd){di++;if(di>=customDates.length)di=customDates.length-1;[sH,sM]=(customDates[di].time||'09:00').split(':').map(Number);cm=sH*60+sM;md=0;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:customDates[di].date,time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}
+if(scheduleMode==='continuous'){const sd=gv('startDate'),st=gv('startTime'),dur=parseInt(gv('matchDuration'))||30,brk=parseInt(gv('breakTime'))||10,mpd=parseInt(gv('maxMatchesPerDay'))||10,cc=parseInt(gv('courtCount'))||1;const cn=gv('courtNames').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));let cd=parseDateStr(sd);const[sH,sM]=st.split(':').map(Number);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:toDateStr(cd),time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='weekday'){const sd=gv('startDateW'),st=gv('startTimeW'),dur=parseInt(gv('matchDurationW'))||30,brk=parseInt(gv('breakTimeW'))||10,mpd=parseInt(gv('maxMatchesPerDayW'))||10,cc=parseInt(gv('courtCountW'))||1;const cn=gv('courtNamesW').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));const weekdays=getSelectedWeekdays();if(weekdays.length===0){alert('체육 수업 요일을 선택하세요!');return}let cd=parseDateStr(sd);const[sH,sM]=st.split(':').map(Number);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);let md=0,cm=sH*60+sM,ci=0;pl.forEach(m=>{if(md>=mpd){cd.setDate(cd.getDate()+1);while(!weekdays.includes(cd.getDay()))cd.setDate(cd.getDate()+1);md=0;cm=sH*60+sM;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:toDateStr(cd),time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}else if(scheduleMode==='custom'){if(customDates.length===0){alert('경기 날짜를 추가하세요!');return}const dur=parseInt(gv('matchDurationC'))||30,brk=parseInt(gv('breakTimeC'))||10,mpd=parseInt(gv('maxMatchesPerDayC'))||10,cc=parseInt(gv('courtCountC'))||1;const cn=gv('courtNamesC').split(',').map(s=>s.trim());while(cn.length<cc)cn.push('코트 '+(cn.length+1));let di=0,md=0,ci=0;let[sH,sM]=(customDates[0].time||'09:00').split(':').map(Number);let cm=sH*60+sM;pl.forEach(m=>{if(md>=mpd){di++;if(di>=customDates.length)di=customDates.length-1;[sH,sM]=(customDates[di].time||'09:00').split(':').map(Number);cm=sH*60+sM;md=0;ci=0}const hh=Math.floor(cm/60),mn=cm%60;state.matchSchedules.push({matchId:m.id,date:customDates[di].date,time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,court:cn[ci%cn.length],team1:m.team1,team2:m.team2,round:m.round,group:m.group??null});ci++;if(ci>=cc){ci=0;cm+=dur+brk}md++})}
 renderSchedule()}
 
 
@@ -1915,17 +1983,53 @@ h+=`<button class="btn btn-primary btn-sm" onclick="confirmSBResult(${c})">✅ �
 </div></div>`}
 h+=`</div>`;
 area.innerHTML=h;
-for(let c=0;c<count;c++){populateSBSelect(c);setSBTimerFromSelect(c)}}
+for(let c=0;c<count;c++){
+  populateSBSelect(c);
+  const ss=scoreboardStates[c];
+  // 남은 타이머 시간이 있으면 그대로 이어서 보여준다
+  if(ss&&ss.timerSeconds>0)updateSBTimer(c);else setSBTimerFromSelect(c);
+  // 고르고 있던 경기와 점수를 되살린다
+  if(ss&&ss.matchId){
+    const sel=document.getElementById('sbMatch_'+c);
+    if(sel)sel.value=String(ss.matchId);
+    paintSBMatch(c);
+  }
+}}
+
+// 현재 코트 상태를 화면에 다시 그린다 (점수는 건드리지 않음)
+function paintSBMatch(ci){
+  const ss=scoreboardStates[ci];
+  if(!ss||!ss.matchId)return;
+  const m=state.matches.find(x=>x.id===ss.matchId);
+  const t1=document.getElementById('sbTeam1_'+ci);
+  if(!m||!t1){if(ss)ss.matchId=null;return}
+  const sets=getSetCount();
+  if(!ss.scores)ss.scores=[0,0];
+  if(sets>0){
+    if(!ss.setScores)ss.setScores=[];
+    while(ss.setScores.length<sets)ss.setScores.push({s1:0,s2:0});
+    if(ss.currentSet==null||ss.currentSet>=sets)ss.currentSet=0;
+  }
+  t1.textContent=m.team1;
+  document.getElementById('sbTeam2_'+ci).textContent=m.team2;
+  document.getElementById('sbScore1_'+ci).textContent=ss.scores[0];
+  document.getElementById('sbScore2_'+ci).textContent=ss.scores[1];
+  const sch=state.matchSchedules.find(x=>x.matchId===m.id);
+  const count=parseInt(gv('sbCourtCount'))||1;
+  document.getElementById('sbTitle_'+ci).textContent=(count>1?'코트 '+(ci+1)+' — ':'')+'경기 #'+m.id+(sch?' | '+fmtD(sch.date)+' '+sch.time:'');
+  updateSBSetDisplay(ci);
+  updateSBEventLog(ci);
+}
 
 function populateScoreboardSelects(){const count=parseInt(gv('sbCourtCount'))||1;for(let c=0;c<count;c++)populateSBSelect(c)}
-function loadSBMatch(ci){const id=parseInt(gv('sbMatch_'+ci));if(!id)return;const m=state.matches.find(x=>x.id===id);if(!m)return;const ss=scoreboardStates[ci];const sets=getSetCount();ss.matchId=id;ss.scores=[0,0];ss.currentSet=0;ss.setWins=[0,0];ss.setScores=[];for(let i=0;i<sets;i++)ss.setScores.push({s1:0,s2:0});if(m.setScores&&m.setScores.length>0){ss.setScores=m.setScores.map(s=>({s1:s.s1,s2:s.s2}));while(ss.setScores.length<sets)ss.setScores.push({s1:0,s2:0});let w1=0,w2=0;ss.setScores.forEach(s=>{if(s.s1>s.s2)w1++;else if(s.s2>s.s1)w2++});ss.setWins=[w1,w2];ss.currentSet=ss.setScores.findIndex(s=>s.s1===0&&s.s2===0);if(ss.currentSet===-1)ss.currentSet=sets-1;ss.scores=[ss.setScores[ss.currentSet].s1,ss.setScores[ss.currentSet].s2]}else if(m.score1!==null&&sets===0){ss.scores=[m.score1||0,m.score2||0]}document.getElementById('sbTeam1_'+ci).textContent=m.team1;document.getElementById('sbTeam2_'+ci).textContent=m.team2;document.getElementById('sbScore1_'+ci).textContent=ss.scores[0];document.getElementById('sbScore2_'+ci).textContent=ss.scores[1];const sch=state.matchSchedules.find(x=>x.matchId===m.id);const count=parseInt(gv('sbCourtCount'))||1;document.getElementById('sbTitle_'+ci).textContent=`${count>1?'코트 '+(ci+1)+' — ':''}경기 #${m.id}${sch?' | '+fmtD(sch.date)+' '+sch.time:''}`;updateSBSetDisplay(ci);updateSBEventLog(ci)}
+function loadSBMatch(ci){const id=parseInt(gv('sbMatch_'+ci));if(!id)return;const m=state.matches.find(x=>x.id===id);if(!m)return;const ss=scoreboardStates[ci];const sets=getSetCount();ss.matchId=id;ss.scores=[0,0];ss.currentSet=0;ss.setWins=[0,0];ss.setScores=[];for(let i=0;i<sets;i++)ss.setScores.push({s1:0,s2:0});if(m.setScores&&m.setScores.length>0){ss.setScores=m.setScores.map(s=>({s1:s.s1,s2:s.s2}));while(ss.setScores.length<sets)ss.setScores.push({s1:0,s2:0});let w1=0,w2=0;ss.setScores.forEach(s=>{if(s.s1>s.s2)w1++;else if(s.s2>s.s1)w2++});ss.setWins=[w1,w2];ss.currentSet=ss.setScores.findIndex(s=>s.s1===0&&s.s2===0);if(ss.currentSet===-1)ss.currentSet=sets-1;ss.scores=[ss.setScores[ss.currentSet].s1,ss.setScores[ss.currentSet].s2]}else if(m.score1!==null&&sets===0){ss.scores=[m.score1||0,m.score2||0]}document.getElementById('sbTeam1_'+ci).textContent=m.team1;document.getElementById('sbTeam2_'+ci).textContent=m.team2;document.getElementById('sbScore1_'+ci).textContent=ss.scores[0];document.getElementById('sbScore2_'+ci).textContent=ss.scores[1];const sch=state.matchSchedules.find(x=>x.matchId===m.id);const count=parseInt(gv('sbCourtCount'))||1;document.getElementById('sbTitle_'+ci).textContent=`${count>1?'코트 '+(ci+1)+' — ':''}경기 #${m.id}${sch?' | '+fmtD(sch.date)+' '+sch.time:''}`;updateSBSetDisplay(ci);updateSBEventLog(ci);autoSave()}
 
 function updateSBSetDisplay(ci){const sets=getSetCount();if(sets===0)return;const ss=scoreboardStates[ci];for(let s=0;s<sets;s++){const badge=document.getElementById('sbSetBadge_'+ci+'_'+s);if(!badge)continue;const sc=ss.setScores[s];badge.className='sb-set-badge';if(s===ss.currentSet){badge.className='sb-set-badge active';badge.textContent=`${s+1}세트 🔴`}else if(sc&&(sc.s1>0||sc.s2>0)){if(sc.s1>sc.s2){badge.className='sb-set-badge won';badge.textContent=`${s+1}세트 ${sc.s1}:${sc.s2}`}else if(sc.s2>sc.s1){badge.className='sb-set-badge lost';badge.textContent=`${s+1}세트 ${sc.s1}:${sc.s2}`}else badge.textContent=`${s+1}세트 ${sc.s1}:${sc.s2}`}else badge.textContent=`${s+1}세트`}const w1El=document.getElementById('sbSetW1_'+ci);const w2El=document.getElementById('sbSetW2_'+ci);if(w1El)w1El.textContent=ss.setWins[0];if(w2El)w2El.textContent=ss.setWins[1];const label=document.getElementById('sbSetLabel_'+ci);if(label)label.textContent=`현재: ${ss.currentSet+1}세트 득점`}
 
-function nextSBSet(ci){const ss=scoreboardStates[ci];const sets=getSetCount();if(sets===0)return;ss.setScores[ss.currentSet]={s1:ss.scores[0],s2:ss.scores[1]};let w1=0,w2=0;ss.setScores.forEach(s=>{if(s.s1>s.s2)w1++;else if(s.s2>s.s1)w2++});ss.setWins=[w1,w2];const needWin=Math.ceil(sets/2);if(w1>=needWin||w2>=needWin){alert(`세트 스코어 ${w1}:${w2} — ${w1>w2?document.getElementById('sbTeam1_'+ci).textContent:document.getElementById('sbTeam2_'+ci).textContent} 승리!\n"결과 확정" 버튼을 눌러주세요.`);updateSBSetDisplay(ci);return}if(ss.currentSet<sets-1){ss.currentSet++;ss.scores=[ss.setScores[ss.currentSet].s1,ss.setScores[ss.currentSet].s2];document.getElementById('sbScore1_'+ci).textContent=ss.scores[0];document.getElementById('sbScore2_'+ci).textContent=ss.scores[1];updateSBSetDisplay(ci)}}
+function nextSBSet(ci){const ss=scoreboardStates[ci];const sets=getSetCount();if(sets===0)return;ss.setScores[ss.currentSet]={s1:ss.scores[0],s2:ss.scores[1]};let w1=0,w2=0;ss.setScores.forEach(s=>{if(s.s1>s.s2)w1++;else if(s.s2>s.s1)w2++});ss.setWins=[w1,w2];const needWin=Math.ceil(sets/2);if(w1>=needWin||w2>=needWin){alert(`세트 스코어 ${w1}:${w2} — ${w1>w2?document.getElementById('sbTeam1_'+ci).textContent:document.getElementById('sbTeam2_'+ci).textContent} 승리!\n"결과 확정" 버튼을 눌러주세요.`);updateSBSetDisplay(ci);return}if(ss.currentSet<sets-1){ss.currentSet++;ss.scores=[ss.setScores[ss.currentSet].s1,ss.setScores[ss.currentSet].s2];document.getElementById('sbScore1_'+ci).textContent=ss.scores[0];document.getElementById('sbScore2_'+ci).textContent=ss.scores[1];updateSBSetDisplay(ci);autoSave()}}
 
 function startSBTimer(ci){const ss=scoreboardStates[ci];if(ss.timerRunning)return;if(ss.timerSeconds<=0)setSBTimerFromSelect(ci);ss.timerRunning=true;timerIntervals[ci]=setInterval(()=>{ss.timerSeconds--;updateSBTimer(ci);if(ss.timerSeconds<=0){pauseSBTimer(ci);document.getElementById('sbTimer_'+ci).style.color='#ef4444';alert('⏰ '+(parseInt(gv('sbCourtCount'))>1?'코트 '+(ci+1)+' ':'')+'시간 종료!')}},1000)}
-function pauseSBTimer(ci){const ss=scoreboardStates[ci];ss.timerRunning=false;if(timerIntervals[ci])clearInterval(timerIntervals[ci])}
+function pauseSBTimer(ci){const ss=scoreboardStates[ci];ss.timerRunning=false;if(timerIntervals[ci])clearInterval(timerIntervals[ci]);autoSave()}
 function resetSBTimer(ci){pauseSBTimer(ci);setSBTimerFromSelect(ci)}
 function setSBTimerFromSelect(ci){const ss=scoreboardStates[ci];ss.timerSeconds=(parseInt(document.getElementById('sbTimerMin_'+ci).value)||10)*60;updateSBTimer(ci);const el=document.getElementById('sbTimer_'+ci);if(el)el.style.color='#fff'}
 function updateSBTimer(ci){const ss=scoreboardStates[ci];const m=Math.floor(ss.timerSeconds/60),s=ss.timerSeconds%60;const el=document.getElementById('sbTimer_'+ci);if(el)el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')}
@@ -2168,7 +2272,10 @@ function toggleDarkMode(){document.body.classList.toggle('dark-mode');const isDa
 // ===================== PRESETS =====================
 const PRESET_KEY='bracketPro_presets';
 function getAllPresets(){try{return JSON.parse(localStorage.getItem(PRESET_KEY))||[]}catch{return[]}}
-function saveAllPresets(presets){localStorage.setItem(PRESET_KEY,JSON.stringify(presets))}
+function saveAllPresets(presets){
+  try{localStorage.setItem(PRESET_KEY,JSON.stringify(presets));return true}
+  catch(e){alert('명단 보관함 저장에 실패했습니다. 브라우저 저장 공간이 부족합니다.');return false}
+}
 function savePreset(){if(state.students.length===0){alert('저장할 학생 명단이 없습니다!');return}let name=document.getElementById('presetName').value.trim();if(!name){name=prompt('프리셋 이름:','1학년 3반');if(!name)return}const presets=getAllPresets();const existing=presets.findIndex(p=>p.name===name);if(existing>=0){if(!confirm('"'+name+'" 덮어쓸까요?'))return;presets[existing].students=JSON.parse(JSON.stringify(state.students));presets[existing].savedAt=new Date().toISOString()}else{presets.push({name:name,students:JSON.parse(JSON.stringify(state.students)),savedAt:new Date().toISOString()})}saveAllPresets(presets);document.getElementById('presetName').value='';renderPresets();alert('✅ "'+name+'" 저장 완료! ('+state.students.length+'명)')}
 function loadPreset(idx){const presets=getAllPresets();if(!presets[idx])return;const p=presets[idx];if(state.students.length>0&&!confirm('현재 명단을 교체할까요?'))return;state.students=JSON.parse(JSON.stringify(p.students));state.students.forEach(s=>{if(!s.level)s.level='X'});renderStudents();updateConditionSelects();autoSave();alert('✅ "'+p.name+'" 불러옴!')}
 function deletePreset(idx){const presets=getAllPresets();if(!presets[idx])return;if(!confirm('"'+presets[idx].name+'" 삭제?'))return;presets.splice(idx,1);saveAllPresets(presets);renderPresets()}
@@ -2859,7 +2966,7 @@ function generateGroupSchedule(pl){
 
   const maxRounds=Math.max(0,...groupMatches.map(g=>g.length));
 
-  let cd=new Date(sd);
+  let cd=parseDateStr(sd);
   if(weekdays){
     while(!weekdays.includes(cd.getDay())) cd.setDate(cd.getDate()+1);
   }
@@ -2885,7 +2992,7 @@ function generateGroupSchedule(pl){
       baseTime = slot ? slot.time : stTime;
       customIdx++;
     }else{
-      dateStr=cd.toISOString().split('T')[0];
+      dateStr=toDateStr(cd);
     }
 
     let [bH,bM]=(baseTime||'09:00').split(':').map(Number);
@@ -2932,10 +3039,10 @@ function generateGroupSchedule(pl){
 
     if(state.matchSchedules.length>0){
       const lastDate = state.matchSchedules.map(s=>s.date).sort().at(-1);
-      startDate = new Date(lastDate+'T00:00:00');
+      startDate = parseDateStr(lastDate);
       startDate.setDate(startDate.getDate()+1);
     }else{
-      startDate = new Date(sd+'T00:00:00');
+      startDate = parseDateStr(sd);
     }
 
     if(weekdays){
@@ -2962,7 +3069,7 @@ function generateGroupSchedule(pl){
 
         state.matchSchedules.push({
           matchId:m.id,
-          date:cd2.toISOString().split('T')[0],
+          date:toDateStr(cd2),
           time:`${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`,
           court:cn[ci%cn.length],
           team1:m.team1,
@@ -2985,6 +3092,56 @@ function generateGroupSchedule(pl){
 }
 
 /* ---------- 점수 저장 (조별 종료 시 본선 자동 생성) ---------- */
+
+/* ---------- 앞 경기 결과를 고쳤을 때 뒷 라운드 정리 ---------- */
+
+// 이 경기 다음 라운드 이후에 이미 입력된 결과가 있는가
+function hasDownstreamResult(m){
+  let cur=m;
+  const seen=new Set();
+  while(cur&&cur.nextMatchId&&!seen.has(cur.id)){
+    seen.add(cur.id);
+    const nx=state.matches.find(x=>x.id===cur.nextMatchId);
+    if(!nx)break;
+    if(nx.score1!==null)return true;
+    cur=nx;
+  }
+  const tp=state.matches.find(x=>x.isThirdPlace);
+  return !!(tp&&tp.score1!==null);
+}
+
+// 이 경기 다음 라운드부터 끝까지 결과를 지우고 자리를 비운다
+function resetDownstream(m){
+  let cur=m;
+  const seen=new Set();
+  while(cur&&cur.nextMatchId&&!seen.has(cur.id)){
+    seen.add(cur.id);
+    const nx=state.matches.find(x=>x.id===cur.nextMatchId);
+    if(!nx)break;
+    const pv=state.matches.filter(x=>x.nextMatchId===nx.id);
+    if(pv[0]&&pv[0].id===cur.id) nx.team1='?'; else nx.team2='?';
+    nx.score1=null;nx.score2=null;nx.setScores=null;nx.winner=null;
+    state.matchEvents=state.matchEvents.filter(e=>e.matchId!==nx.id);
+    cur=nx;
+  }
+  const tp=state.matches.find(x=>x.isThirdPlace);
+  if(tp){
+    tp.team1='?';tp.team2='?';tp.score1=null;tp.score2=null;tp.setScores=null;tp.winner=null;
+    state.matchEvents=state.matchEvents.filter(e=>e.matchId!==tp.id);
+  }
+}
+
+// 승자가 바뀌는 경우, 사용자에게 먼저 물어보고 뒷 라운드를 정리한다.
+// 계속 진행해도 되면 true, 취소면 false
+function confirmWinnerChange(m,newWinner){
+  if(!m.winner || m.winner===newWinner) return true;
+  if(hasDownstreamResult(m)){
+    if(!confirm('이 경기의 승리 팀이 "'+m.winner+'" → "'+(newWinner||'미정')+'"으로 바뀝니다.\n\n다음 라운드부터 이미 입력해 둔 경기 결과가 모두 지워집니다.\n(3위 결정전 포함)\n\n계속할까요?')) return false;
+  }
+  resetDownstream(m);
+  return true;
+}
+
 function saveModalScore(){
   if(curMM===null) return;
 
@@ -3005,28 +3162,33 @@ function saveModalScore(){
       else if(s2>s1) w2++;
     }
 
-    m.setScores=setScores;
-    m.score1=w1;
-    m.score2=w2;
-
     if((state.format==='tournament' || m.phase==='knockout') && w1===w2){
-      alert('토너먼트에서는 승패가 결정되어야 합니다!');
+      alert('토너먼트에서는 승패가 결정되어야 합니다. 세트 점수를 다시 확인해 주세요.');
       return;
     }
 
-    m.winner=w1>w2?m.team1:w2>w1?m.team2:null;
+    const newWinner=w1>w2?m.team1:w2>w1?m.team2:null;
+    if((state.format==='tournament' || m.phase==='knockout') && !confirmWinnerChange(m,newWinner)) return;
+
+    m.setScores=setScores;
+    m.score1=w1;
+    m.score2=w2;
+    m.winner=newWinner;
   }else{
     const s1=parseInt(gv('modalScore1'))||0;
     const s2=parseInt(gv('modalScore2'))||0;
 
     if((state.format==='tournament' || m.phase==='knockout') && s1===s2){
-      alert('토너먼트 무승부 불가!');
+      alert('토너먼트에서는 무승부로 둘 수 없습니다. 승부를 가려 주세요.');
       return;
     }
 
+    const newWinner=s1>s2?m.team1:s1<s2?m.team2:null;
+    if((state.format==='tournament' || m.phase==='knockout') && !confirmWinnerChange(m,newWinner)) return;
+
     m.score1=s1;
     m.score2=s2;
-    m.winner=s1>s2?m.team1:s1<s2?m.team2:null;
+    m.winner=newWinner;
   }
 
   if(state.format==='tournament' || m.phase==='knockout'){
@@ -3101,25 +3263,31 @@ function confirmSBResult(ci){
     });
 
     if((state.format==='tournament' || m.phase==='knockout') && w1===w2){
-      alert('토너먼트에서는 승패가 결정되어야 합니다!');
+      alert('토너먼트에서는 승패가 결정되어야 합니다. 세트 점수를 다시 확인해 주세요.');
       return;
     }
+
+    const newWinner=w1>w2?m.team1:w2>w1?m.team2:null;
+    if((state.format==='tournament' || m.phase==='knockout') && !confirmWinnerChange(m,newWinner)) return;
 
     m.setScores=ss.setScores.map(s=>({s1:s.s1,s2:s.s2}));
     m.score1=w1;
     m.score2=w2;
-    m.winner=w1>w2?m.team1:w2>w1?m.team2:null;
+    m.winner=newWinner;
 
     alert(`경기 #${m.id}\n${m.team1} ${w1} : ${w2} ${m.team2}\n(${ss.setScores.map((s,i)=>(i+1)+'세트 '+s.s1+':'+s.s2).join(', ')})`);
   }else{
     if((state.format==='tournament' || m.phase==='knockout') && ss.scores[0]===ss.scores[1]){
-      alert('토너먼트 무승부 불가!');
+      alert('토너먼트에서는 무승부로 둘 수 없습니다. 승부를 가려 주세요.');
       return;
     }
 
+    const newWinner=ss.scores[0]>ss.scores[1]?m.team1:ss.scores[0]<ss.scores[1]?m.team2:null;
+    if((state.format==='tournament' || m.phase==='knockout') && !confirmWinnerChange(m,newWinner)) return;
+
     m.score1=ss.scores[0];
     m.score2=ss.scores[1];
-    m.winner=m.score1>m.score2?m.team1:m.score1<m.score2?m.team2:null;
+    m.winner=newWinner;
 
     alert(`경기 #${m.id}\n${m.team1} ${m.score1} : ${m.score2} ${m.team2}`);
   }
@@ -3538,7 +3706,7 @@ function applyCurrentOrderToTimes(ev){
       matchInDay++;
     });
   }else{
-    let cd = new Date(sd + 'T00:00:00');
+    let cd = parseDateStr(sd);
 
     if(weekdays){
       while(!weekdays.includes(cd.getDay())){
@@ -3562,7 +3730,7 @@ function applyCurrentOrderToTimes(ev){
       const hh = Math.floor(currentMin/60);
       const mn = currentMin%60;
 
-      s.date = cd.toISOString().split('T')[0];
+      s.date = toDateStr(cd);
       s.time = `${String(hh).padStart(2,'0')}:${String(mn).padStart(2,'0')}`;
       s.court = cn[courtIdx%cn.length];
 
@@ -4036,6 +4204,7 @@ function changeSB(ci,team,delta){
   if(sets > 0){
     updateSBSetDisplay(ci);
   }
+  autoSave();
 }
 
 /* + 버튼: 점수를 올리고, 득점자 기록이 켜져 있으면 선수 선택 창을 띄운다. */

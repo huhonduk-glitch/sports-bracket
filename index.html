@@ -184,9 +184,9 @@ textarea{resize:vertical;min-height:80px}
 .qr-container{display:flex;flex-direction:column;align-items:center;padding:1.5rem;background:#fff;border-radius:12px;border:2px solid var(--border);margin-top:.8rem}
 .qr-container canvas{border-radius:8px}
 .qr-info{margin-top:.8rem;text-align:center;font-size:.82rem;color:var(--text-light)}
-.dark-toggle{position:fixed;bottom:1.2rem;right:1.2rem;z-index:200;width:48px;height:48px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 15px rgba(0,0,0,.3);transition:all .3s;display:flex;align-items:center;justify-content:center}
-.dark-toggle:hover{transform:scale(1.1)}
-body.dark-mode .dark-toggle{background:#f59e0b}
+.dark-toggle{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:1.05rem;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.dark-toggle:hover{background:var(--primary-light);border-color:var(--primary)}
+body.dark-mode .dark-toggle{border-color:#475569;color:#fbbf24}
 @media print{.no-print{display:none!important}body{background:#fff}.header{background:#1e3a8a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.tab-nav,.project-bar{display:none}.card{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}.btn{display:none}}
 @media(max-width:768px){.header h1{font-size:1.2rem}.container{padding:.6rem}.form-row{grid-template-columns:1fr}.schedule-item{grid-template-columns:55px 1fr}.scoreboard-team .score{font-size:1.8rem;padding:.2rem .6rem}.timer-display{font-size:1.8rem}.project-bar{font-size:.75rem}.scoreboard-grid.courts-2,.scoreboard-grid.courts-3,.scoreboard-grid.courts-4,.scoreboard-grid.courts-5,.scoreboard-grid.courts-6{grid-template-columns:1fr}}
 body.dark-mode{--bg:#0f172a;--card:#1e293b;--text:#e2e8f0;--text-light:#94a3b8;--border:#334155}
@@ -302,51 +302,47 @@ body.view-mode::after{content:'👀 읽기 전용 모드';position:fixed;top:10p
 .edit-member-item input{flex:1;border:1px solid var(--border);border-radius:4px;padding:.2rem .4rem;font-size:.82rem}
 body.dark-mode .edit-member-item{background:#253349}
 body.dark-mode .edit-modal-row input,body.dark-mode .edit-modal-row select{background:#0f172a;color:#e2e8f0;border-color:#334155}
-body.view-mode .edit-btn{display:none!important}
+body.view-mode .edit-btn,body.view-mode .action-bar,body.view-mode .danger-zone,body.view-mode .bulk-tools{display:none!important}
 </style>
 </head>
 <body>
 <div class="header">
-<h1>🏆 대진표 자동 생성기 Pro v4</h1>
-<p>팀 편성 · 리그 · 토너먼트 · 일정 관리 · 멀티 스코어보드</p>
+<h1>🏆 대진표 자동 생성기</h1>
+<p>팀 편성 · 리그 · 토너먼트 · 일정 · 점수 기록</p>
 </div>
 
 <div class="project-bar no-print" id="projectBar">
-<span>📁</span>
-<select id="projectSelect" onchange="loadProject()"><option value="">-- 프로젝트 --</option></select>
-<button class="btn btn-primary btn-sm" onclick="newProject()">➕ 새 대회</button>
-<button class="btn btn-success btn-sm" onclick="exportProject()">📤 내보내기</button>
-<button class="btn btn-warning btn-sm" onclick="document.getElementById('importFile').click()">📥 불러오기</button>
-<input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(event)">
-<button class="btn btn-danger btn-sm" onclick="deleteProject()">🗑️</button>
-<span class="save-indicator" id="saveIndicator">✅ 저장됨</span>
+<span class="pb-label">대회</span>
+<select id="projectSelect" onchange="loadProject()"><option value="">대회를 선택하세요</option></select>
+<button class="btn btn-primary btn-sm" onclick="newProject()">＋ 새 대회</button>
 <span class="project-name-display" id="projectNameDisplay"></span>
+<span class="pb-spacer"></span>
+<span class="save-indicator" id="saveIndicator">저장됨</span>
+<button class="btn btn-secondary btn-sm" onclick="exportProject()" title="이 대회를 파일로 백업합니다">백업 저장</button>
+<button class="btn btn-secondary btn-sm" onclick="document.getElementById('importFile').click()" title="백업 파일을 불러옵니다">백업 열기</button>
+<input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(event)">
+<button class="btn btn-ghost-danger btn-sm" onclick="deleteProject()" title="이 대회를 삭제합니다">대회 삭제</button>
+<button class="dark-toggle no-print" onclick="toggleDarkMode()" id="darkToggleBtn" title="화면 밝기 전환">🌙</button>
 </div>
 
-<nav class="tab-nav no-print">
-<button class="tab-btn active" data-tab="teammaker" onclick="switchTab('teammaker')">👥 팀편성</button>
-<button class="tab-btn" data-tab="setup" onclick="switchTab('setup')">⚙️ 대회설정</button>
-<button class="tab-btn" data-tab="bracket" onclick="switchTab('bracket')">🏅 대진표</button>
-<button class="tab-btn" data-tab="schedule" onclick="switchTab('schedule')">📅 일정</button>
-<button class="tab-btn" data-tab="scoreboard" onclick="switchTab('scoreboard')">📊 스코어보드</button>
-<button class="tab-btn" data-tab="dashboard" onclick="switchTab('dashboard')">🏠 팀현황</button>
-<button class="tab-btn" data-tab="help" onclick="switchTab('help')">❓ 사용법</button>
+<nav class="tab-nav no-print" id="tabNav">
+<button class="tab-btn step" data-tab="teammaker" onclick="switchTab('teammaker')"><span class="step-no">1</span><span class="tab-label">팀 편성</span></button>
+<button class="tab-btn step" data-tab="setup" onclick="switchTab('setup')"><span class="step-no">2</span><span class="tab-label">대회 설정</span></button>
+<button class="tab-btn step" data-tab="bracket" onclick="switchTab('bracket')"><span class="step-no">3</span><span class="tab-label">대진표</span></button>
+<button class="tab-btn step" data-tab="schedule" onclick="switchTab('schedule')"><span class="step-no">4</span><span class="tab-label">일정</span></button>
+<button class="tab-btn step" data-tab="scoreboard" onclick="switchTab('scoreboard')"><span class="step-no">5</span><span class="tab-label">점수 입력</span></button>
+<span class="tab-divider" aria-hidden="true"></span>
+<button class="tab-btn aux" data-tab="dashboard" onclick="switchTab('dashboard')"><span class="tab-label">팀 현황</span></button>
+<button class="tab-btn aux" data-tab="help" onclick="switchTab('help')"><span class="tab-label">사용법</span></button>
 </nav>
 
 <div class="container">
 
 <div id="tab-teammaker" class="tab-content active">
+<p class="step-hint">1단계 · 학생을 등록하고 팀을 자동으로 나눕니다</p>
 <div class="card">
-<h2>📚 학급 명단 프리셋</h2>
-<div class="info-box">자주 쓰는 학급 명단을 저장해두면 매번 입력할 필요 없이 한 번에 불러올 수 있어요!</div>
-<div class="form-row">
-<div class="form-group" style="flex:2"><label>프리셋 이름</label><input type="text" id="presetName" placeholder="예: 1학년 3반, 2학년 체육반..." onkeydown="if(event.key==='Enter')savePreset()"></div>
-<div class="form-group" style="flex:1"><label>&nbsp;</label><button class="btn btn-success w-full" onclick="savePreset()">💾 현재 명단 저장</button></div>
-</div>
-<div class="preset-list" id="presetList"></div>
-</div>
-<div class="card">
-<h2>📋 학생 명단 등록</h2>
+<h2>학생 명단 등록</h2>
+<p class="card-sub">저장해 둔 반 명단이 있다면 <a href="#presetCard" class="inline-link" onclick="document.getElementById('presetCard').scrollIntoView({behavior:'smooth'});return false">학급 명단 보관함</a>에서 불러오세요.</p>
 <div class="toggle-group mb-1" id="studentInputToggle">
 <button class="toggle-option active" onclick="setStudentInput('manual')">✏️ 직접 입력</button>
 <button class="toggle-option" onclick="setStudentInput('bulk')">📝 일괄 입력</button>
@@ -358,7 +354,7 @@ body.view-mode .edit-btn{display:none!important}
 <div class="form-group"><label>이름</label><input type="text" id="sName" placeholder="홍길동" onkeydown="if(event.key==='Enter')addStudent()"></div>
 <div class="form-group"><label>성별</label><select id="sGender"><option value="M">남</option><option value="F">여</option><option value="X">미지정</option></select></div>
 <div class="form-group"><label>수준</label><select id="sLevel"><option value="X">미지정</option><option value="A">상 (A)</option><option value="B">중 (B)</option><option value="C">하 (C)</option></select></div>
-<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addStudent()">➕ 추가</button></div>
+<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addStudent()">학생 추가</button></div>
 </div>
 </div>
 <div id="studentBulk" class="hidden">
@@ -377,18 +373,25 @@ body.view-mode .edit-btn{display:none!important}
 <div id="filePreview" class="mt-1"></div>
 <div id="columnMapper" class="hidden mt-1"></div>
 </div>
-<div class="btn-group">
-<button class="btn btn-warning btn-sm" onclick="autoNumberStudents()">🔢 자동 번호매기기</button>
-<button class="btn btn-secondary btn-sm" onclick="setAllGender('M')">👦 전체 남</button>
-<button class="btn btn-secondary btn-sm" onclick="setAllGender('F')">👧 전체 여</button>
-<button class="btn btn-secondary btn-sm" onclick="setAllLevel('A')" style="color:#ef4444">🔴 전체 상</button>
-<button class="btn btn-secondary btn-sm" onclick="setAllLevel('B')" style="color:#f59e0b">🟡 전체 중</button>
-<button class="btn btn-secondary btn-sm" onclick="setAllLevel('C')" style="color:#10b981">🟢 전체 하</button>
-<button class="btn btn-danger btn-sm" onclick="clearStudents()">🗑️ 전체 삭제</button>
+<div class="bulk-tools">
+<div class="bulk-row"><span class="bulk-label">번호</span>
+<button class="btn btn-secondary btn-sm" onclick="autoNumberStudents()">1번부터 다시 매기기</button></div>
+<div class="bulk-row"><span class="bulk-label">성별 일괄</span>
+<button class="btn btn-secondary btn-sm" onclick="setAllGender('M')">모두 남</button>
+<button class="btn btn-secondary btn-sm" onclick="setAllGender('F')">모두 여</button></div>
+<div class="bulk-row"><span class="bulk-label">수준 일괄</span>
+<button class="btn btn-secondary btn-sm lv-a" onclick="setAllLevel('A')">모두 상</button>
+<button class="btn btn-secondary btn-sm lv-b" onclick="setAllLevel('B')">모두 중</button>
+<button class="btn btn-secondary btn-sm lv-c" onclick="setAllLevel('C')">모두 하</button></div>
+</div>
+<div class="danger-zone">
+<span class="dz-label">되돌릴 수 없음</span>
+<button class="btn btn-danger btn-sm" onclick="clearStudents()">학생 명단 전체 삭제</button>
 </div>
 </div>
 <div class="card">
-<h2>📊 등록된 학생 명단 (<span id="studentTotal">0</span>명 | 남 <span id="studentM">0</span> · 여 <span id="studentF">0</span> · 미지정 <span id="studentX">0</span> | 상 <span id="studentA">0</span> · 중 <span id="studentB">0</span> · 하 <span id="studentC">0</span>)</h2>
+<h2>등록된 학생 <span class="badge-optional"><span id="studentTotal">0</span>명</span></h2>
+<p class="card-sub">남 <strong id="studentM">0</strong> · 여 <strong id="studentF">0</strong> · 미지정 <strong id="studentX">0</strong> &nbsp;|&nbsp; 상 <strong id="studentA">0</strong> · 중 <strong id="studentB">0</strong> · 하 <strong id="studentC">0</strong></p>
 <div style="overflow-x:auto;max-height:400px;overflow-y:auto">
 <table class="student-table" id="studentTable">
 <thead><tr><th style="width:50px">번호</th><th>이름</th><th style="width:70px">성별</th><th style="width:70px">수준</th><th style="width:50px">삭제</th></tr></thead>
@@ -397,7 +400,7 @@ body.view-mode .edit-btn{display:none!important}
 </div>
 </div>
 <div class="card">
-<h2>⚙️ 팀 편성 설정</h2>
+<h2>팀 나누기 설정</h2>
 <div class="form-row">
 <div class="form-group"><label>팀당 인원 수</label><select id="teamSize"><option value="2">2명</option><option value="3">3명</option><option value="4">4명</option><option value="5" selected>5명</option><option value="6">6명</option><option value="7">7명</option><option value="8">8명</option><option value="9">9명</option><option value="10">10명</option><option value="11">11명</option><option value="12">12명</option><option value="13">13명</option><option value="14">14명</option><option value="15">15명</option><option value="16">16명</option></select></div>
 <div class="form-group"><label>팀 표시 방식</label><select id="teamDisplayMode"><option value="name">이름으로 표시</option><option value="number">번호로 표시</option><option value="both">번호+이름</option></select></div>
@@ -408,38 +411,47 @@ body.view-mode .edit-btn{display:none!important}
 <div class="form-group"><label>수준 균형</label><select id="levelBalance"><option value="none">적용 안함</option><option value="balance">균등 배분 (상/중/하 골고루)</option></select></div>
 <div class="form-group"><label>나머지 인원 처리</label><select id="remainderMode"><option value="distribute">기존 팀에 분배</option><option value="extra">소수팀 추가 생성</option></select></div>
 </div>
-<div class="info-box">💡 수준 균형을 적용하면 각 팀에 상/중/하 학생이 골고루 배정되어 팀 간 실력차를 줄일 수 있어요!</div>
+<p class="card-sub">수준 균형을 켜면 각 팀에 상·중·하가 골고루 섞여 팀 간 실력차가 줄어듭니다.</p>
 </div>
 <div class="card">
-<h2>🚫 조건 설정 (선택사항)</h2>
+<h2>짝 조건 <span class="badge-optional">선택</span></h2>
+<p class="card-sub">꼭 붙여야 하거나 떼어놔야 하는 학생이 있을 때만 사용하세요.</p>
 <div class="form-row">
 <div class="form-group"><label>학생 1</label><select id="cond1"><option value="">선택</option></select></div>
-<div class="form-group"><label>조건</label><select id="condType"><option value="block">🚫 같은 팀 금지</option><option value="must">✅ 반드시 같은 팀</option></select></div>
+<div class="form-group"><label>조건</label><select id="condType"><option value="block">같은 팀 금지</option><option value="must">반드시 같은 팀</option></select></div>
 <div class="form-group"><label>학생 2</label><select id="cond2"><option value="">선택</option></select></div>
 <div class="form-group"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addCondition()">조건 추가</button></div>
 </div>
 <div class="condition-list" id="conditionList"></div>
 </div>
-<div class="text-center"><button class="btn btn-success" style="font-size:1.05rem;padding:.8rem 2.2rem" onclick="generateTeams()">🎲 팀 자동 편성!</button></div>
+<div class="card" id="presetCard">
+<h2>학급 명단 보관함</h2>
+<p class="card-sub">자주 쓰는 반 명단을 저장해 두면, 다음에는 불러오기 한 번으로 끝납니다.</p>
+<div class="form-row">
+<div class="form-group"><label>보관할 이름</label><input type="text" id="presetName" placeholder="예: 1학년 3반" onkeydown="if(event.key==='Enter')savePreset()"></div>
+<div class="form-group"><label>&nbsp;</label><button class="btn btn-secondary w-full" onclick="savePreset()">지금 명단 저장</button></div>
+</div>
+<div class="preset-list" id="presetList"></div>
+</div>
 <div id="teamResultArea"></div>
+<div class="action-bar no-print">
+<div class="action-hint" id="teamActionHint">학생을 등록한 뒤 눌러주세요</div>
+<button class="btn btn-primary btn-cta" onclick="generateTeams()">팀 자동 편성</button>
+</div>
 </div>
 
 <div id="tab-setup" class="tab-content">
+<p class="step-hint">2단계 · 경기 방식과 참가팀, 날짜를 정합니다</p>
 <div class="card">
-<h2>📋 대회 기본 설정</h2>
-<div class="form-row">
-<div class="form-group"><label>대회/수업명</label><input type="text" id="tournamentName" placeholder="2026 체육대회" value="2026 체육대회" oninput="autoSave()"></div>
-<div class="form-group"><label>종목명</label><input type="text" id="sportName" placeholder="피구, 축구..." value="피구" oninput="autoSave()"></div>
-</div>
-</div>
-<div class="card">
-<h2>🎯 대회 방식</h2>
+<h2><span class="req-dot"></span>대회 방식</h2>
+<p class="card-sub">패하면 탈락시키려면 토너먼트, 모두가 서로 붙게 하려면 리그전을 고르세요.</p>
 <div class="toggle-group" id="formatToggle">
-<button class="toggle-option active" onclick="setFormat('tournament')">🏆 토너먼트</button>
-<button class="toggle-option" onclick="setFormat('league')">📊 리그전</button>
-<button class="toggle-option" onclick="setFormat('group')">🏅 조별+토너먼트</button>
+<button class="toggle-option active" onclick="setFormat('tournament')">토너먼트</button>
+<button class="toggle-option" onclick="setFormat('league')">리그전</button>
+<button class="toggle-option" onclick="setFormat('group')">조별 + 토너먼트</button>
 </div>
 <div id="tournamentOptions" class="mt-1">
+<details class="opt-block"><summary>토너먼트 세부 설정 (3위전 · 시드 · 부전승)</summary>
 <div class="form-row">
 <div class="form-group"><label>3위 결정전</label><select id="thirdPlace" onchange="autoSave()"><option value="no">없음</option><option value="yes">있음</option></select></div>
 <div class="form-group"><label>시드 배정</label><select id="seedCount" onchange="autoSave()"><option value="0">없음</option><option value="2">2시드</option><option value="4">4시드</option></select></div>
@@ -448,10 +460,12 @@ body.view-mode .edit-btn{display:none!important}
 <div id="byeManualArea" class="hidden mt-1">
 <div class="info-box">💡 부전승(첫 라운드 없이 다음 라운드 직행)을 받을 팀을 선택하세요. 팀 수가 2의 제곱수(4,8,16)가 아닐 때 필요합니다.</div>
 <div id="byeTeamList" class="team-list"></div>
-<div id="byeCountInfo" style="font-size:.8rem;color:var(--text-light);margin-top:.3rem"></div>
+<div id="byeCountInfo" class="hint-text"></div>
 </div>
+</details>
 </div>
 <div id="leagueOptions" class="mt-1 hidden">
+<details class="opt-block"><summary>리그전 세부 설정 (승점 · 라운드 수)</summary>
 <div class="form-row">
 <div class="form-group"><label>승리 승점</label><input type="number" id="winPoints" value="3" min="1" onchange="autoSave()"></div>
 <div class="form-group"><label>무승부 승점</label><input type="number" id="drawPoints" value="1" min="0" onchange="autoSave()"></div>
@@ -460,38 +474,17 @@ body.view-mode .edit-btn{display:none!important}
 <div class="form-row mt-1">
 <div class="form-group"><label>라운드 수 (팀당 대전 횟수)</label><select id="leagueRounds" onchange="autoSave()"><option value="1">1라운드 (각 팀 1번씩)</option><option value="2">2라운드 (홈&어웨이)</option><option value="3">3라운드</option><option value="4">4라운드</option></select></div>
 <div class="form-group"><label>&nbsp;</label><div class="info-box" style="margin:0">예: 8팀 × 2라운드 = 팀당 14경기, 총 56경기</div></div>
-</div></div>
+</div></details></div>
 <div id="groupOptions" class="mt-1 hidden">
+<details class="opt-block" open><summary>조별 세부 설정 (조 수 · 진출 팀 수)</summary>
 <div class="form-row">
 <div class="form-group"><label>조 수</label><input type="number" id="groupCount" value="4" min="2" max="16" onchange="autoSave()"></div>
 <div class="form-group"><label>조별 진출 수</label><input type="number" id="advanceCount" value="2" min="1" max="4" onchange="autoSave()"></div>
-</div></div>
+</div></details></div>
 </div>
 <div class="card">
-<h2>🎾 스코어 방식</h2>
-<div class="toggle-group" id="scoreTypeToggle">
-<button class="toggle-option active" onclick="setScoreType('single')">🔢 단일 점수</button>
-<button class="toggle-option" onclick="setScoreType('set3')">🏸 3세트제</button>
-<button class="toggle-option" onclick="setScoreType('set5')">🏓 5세트제</button>
-</div>
-<div class="form-group" style="margin-top:.5rem">
-  <label class="form-label">득점자 기록</label>
-  <div style="display:flex;align-items:center;gap:.7rem">
-    <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer">
-      <input type="checkbox" id="enableScorerLog" checked onchange="autoSave()">
-      <span>득점 시 선수 선택 팝업 표시</span>
-    </label>
-  </div>
-  <div class="info-box" style="margin-top:.3rem">
-    ℹ️ 배드민턴·탁구·단식 등 득점자 기록이 불필요한 종목은 <b>OFF</b>하세요.<br>
-    OFF 시 점수만 바로 올라가고, 팀현황 개인기록에는 반영되지 않습니다.
-  </div>
-</div>
-<div class="info-box mt-1" id="scoreTypeInfo">단일 점수: 축구, 피구, 농구 등 총점으로 승패 결정</div>
-</div>
-<div class="card">
-<h2>👥 참가팀 등록</h2>
-<div class="info-box">💡 팀편성 탭에서 자동 생성된 팀을 "대진표로 보내기" 하면 여기에 자동 등록됩니다!</div>
+<h2><span class="req-dot"></span>참가팀</h2>
+<p class="card-sub">1단계에서 <strong>팀 자동 편성</strong> 후 <strong>대진표로 보내기</strong>를 누르면 여기에 자동으로 들어옵니다.</p>
 <div class="toggle-group" id="inputMethodToggle">
 <button class="toggle-option active" onclick="setInputMethod('manual')">직접 입력</button>
 <button class="toggle-option" onclick="setInputMethod('auto')">자동 생성</button>
@@ -499,8 +492,8 @@ body.view-mode .edit-btn{display:none!important}
 </div>
 <div id="manualInput" class="mt-1">
 <div class="form-row">
-<div class="form-group" style="flex:2"><label>팀명</label><input type="text" id="teamNameInput" placeholder="Enter로 추가" onkeydown="if(event.key==='Enter')addTeam()"></div>
-<div class="form-group" style="flex:1"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addTeam()">➕</button></div>
+<div class="form-group"><label>팀 이름</label><input type="text" id="teamNameInput" placeholder="입력 후 Enter" onkeydown="if(event.key==='Enter')addTeam()"></div>
+<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addTeam()">팀 추가</button></div>
 </div></div>
 <div id="autoInput" class="hidden mt-1">
 <div class="form-row">
@@ -513,19 +506,22 @@ body.view-mode .edit-btn{display:none!important}
 <button class="btn btn-primary mt-1" onclick="bulkAddTeams()">등록</button>
 </div>
 <div class="team-list" id="teamList"></div>
-<p class="mt-1" style="font-size:.82rem;color:var(--text-light)">현재: <strong id="teamCount">0</strong>팀</p>
+<p class="team-count-line">현재 <strong id="teamCount">0</strong>팀</p>
 <div class="btn-group">
-<button class="btn btn-warning btn-sm" onclick="shuffleTeams()">🔀 섞기</button>
-<button class="btn btn-danger btn-sm" onclick="clearTeams()">🗑️ 삭제</button>
+<button class="btn btn-secondary btn-sm" onclick="shuffleTeams()">순서 섞기</button>
+</div>
+<div class="danger-zone">
+<span class="dz-label">되돌릴 수 없음</span>
+<button class="btn btn-danger btn-sm" onclick="clearTeams()">참가팀 전체 삭제</button>
 </div>
 </div>
 <div class="card">
-<h2>📅 일정 설정</h2>
-<div class="form-group"><label>일정 모드</label>
+<h2><span class="req-dot"></span>언제 경기하나요</h2>
+<div class="form-group"><label>일정 방식</label>
 <div class="toggle-group" id="scheduleModeToggle">
-<button class="toggle-option active" onclick="setScheduleMode('continuous')">📅 연속일</button>
-<button class="toggle-option" onclick="setScheduleMode('weekday')">🗓️ 요일 선택</button>
-<button class="toggle-option" onclick="setScheduleMode('custom')">✏️ 직접 지정</button>
+<button class="toggle-option active" onclick="setScheduleMode('continuous')">날마다 연속</button>
+<button class="toggle-option" onclick="setScheduleMode('weekday')">체육 수업 요일만</button>
+<button class="toggle-option" onclick="setScheduleMode('custom')">날짜 직접 지정</button>
 </div></div>
 <div id="scheduleModeContinuous">
 <div class="form-row">
@@ -569,7 +565,7 @@ body.view-mode .edit-btn{display:none!important}
 <div class="form-row">
 <div class="form-group"><label>날짜 추가</label><input type="date" id="customDateInput" value="2026-04-20"></div>
 <div class="form-group"><label>시작 시간</label><input type="time" id="customTimeInput" value="09:00"></div>
-<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addCustomDate()">➕ 추가</button></div>
+<div class="form-group"><label>&nbsp;</label><button class="btn btn-primary w-full" onclick="addCustomDate()">날짜 추가</button></div>
 </div>
 <div id="customDateList" class="mt-1"></div>
 <div class="form-row mt-1">
@@ -583,19 +579,52 @@ body.view-mode .edit-btn{display:none!important}
 </div>
 </div>
 </div>
-<div class="text-center"><button class="btn btn-success" style="font-size:1.05rem;padding:.8rem 2.2rem" onclick="generateBracket()">🚀 대진표 생성!</button></div>
+<details class="opt-section">
+<summary><span class="opt-title">선택 설정</span><span class="opt-desc">대회 이름 · 점수 방식 · 득점 선수 기록</span></summary>
+<div class="card">
+<h3 class="sub-head">대회 이름</h3>
+<div class="form-row">
+<div class="form-group"><label>대회 / 수업명</label><input type="text" id="tournamentName" placeholder="2026 체육대회" value="2026 체육대회" oninput="autoSave()"></div>
+<div class="form-group"><label>종목명</label><input type="text" id="sportName" placeholder="피구, 축구..." value="피구" oninput="autoSave()"></div>
+</div>
+<h3 class="sub-head">점수 방식</h3>
+<div class="toggle-group" id="scoreTypeToggle">
+<button class="toggle-option active" onclick="setScoreType('single')">단일 점수</button>
+<button class="toggle-option" onclick="setScoreType('set3')">3세트제</button>
+<button class="toggle-option" onclick="setScoreType('set5')">5세트제</button>
+</div>
+<div class="form-group" style="margin-top:.5rem">
+  <label class="form-label">득점 선수 기록</label>
+  <div style="display:flex;align-items:center;gap:.7rem">
+    <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer">
+      <input type="checkbox" id="enableScorerLog" checked onchange="autoSave()">
+      <span>득점 시 선수 선택 팝업 표시</span>
+    </label>
+  </div>
+  <div class="info-box" style="margin-top:.3rem">
+    ℹ️ 배드민턴·탁구·단식 등 득점자 기록이 불필요한 종목은 <b>OFF</b>하세요.<br>
+    OFF 시 점수만 바로 올라가고, 팀현황 개인기록에는 반영되지 않습니다.
+  </div>
+</div>
+<div class="info-box mt-1" id="scoreTypeInfo">단일 점수: 축구, 피구, 농구 등 총점으로 승패 결정</div>
+</div>
+</details>
+<div class="action-bar no-print">
+<div class="action-hint" id="setupActionHint">참가팀을 등록한 뒤 눌러주세요</div>
+<button class="btn btn-primary btn-cta" onclick="generateBracket()">대진표 만들기</button>
+</div>
 </div>
 
 <div id="tab-bracket" class="tab-content">
 <div class="card no-print">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
-<h2>🏅 대진표</h2>
+<h2>대진표</h2>
 <div class="btn-group" style="margin:0">
-<button class="btn btn-secondary btn-sm" onclick="shuffleAndRegenerate()">🔀 재추첨</button>
-<button class="btn btn-secondary btn-sm" onclick="resetResults()">↩️ 초기화</button>
-<button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 인쇄</button>
-<button class="btn btn-success btn-sm" onclick="saveBracketImage()">📸 이미지 저장</button>
-<button class="btn btn-warning btn-sm" onclick="showQRCode()">📱 QR코드</button>
+<button class="btn btn-secondary btn-sm" onclick="window.print()">인쇄</button>
+<button class="btn btn-secondary btn-sm" onclick="saveBracketImage()">이미지로 저장</button>
+<button class="btn btn-secondary btn-sm" onclick="showQRCode()">QR코드</button>
+<button class="btn btn-secondary btn-sm" onclick="shuffleAndRegenerate()">다시 추첨</button>
+<button class="btn btn-ghost-danger btn-sm" onclick="resetResults()">결과 초기화</button>
 </div></div></div>
 <div id="bracketArea"></div>
 </div>
@@ -603,18 +632,19 @@ body.view-mode .edit-btn{display:none!important}
 <div id="tab-schedule" class="tab-content">
 <div class="card">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
-<h2>📅 대진 일정표</h2>
+<h2>경기 일정</h2>
 <div class="btn-group" style="margin:0">
-<button class="btn btn-secondary btn-sm" onclick="toggleScheduleView('list')">📋 리스트</button>
-<button class="btn btn-secondary btn-sm" onclick="toggleScheduleView('calendar')">📅 달력</button>
-<button class="btn btn-primary btn-sm" onclick="window.print()">🖨️</button>
+<button class="btn btn-secondary btn-sm" onclick="toggleScheduleView('list')">목록으로 보기</button>
+<button class="btn btn-secondary btn-sm" onclick="toggleScheduleView('calendar')">날짜별로 보기</button>
+<button class="btn btn-secondary btn-sm" onclick="window.print()">인쇄</button>
 </div></div></div>
 <div id="scheduleArea"></div>
 </div>
 
 <div id="tab-scoreboard" class="tab-content">
 <div class="card">
-<h2>📊 멀티 스코어보드 & 타이머</h2>
+<h2>점수 입력 · 타이머</h2>
+<p class="card-sub">코트별로 점수를 올리고, 경기가 끝나면 결과 확정을 누르세요.</p>
 <div class="form-row">
 <div class="form-group"><label>동시 운영 코트 수</label>
 <select id="sbCourtCount" onchange="initScoreboards()">
@@ -627,7 +657,7 @@ body.view-mode .edit-btn{display:none!important}
 </div>
 
 <div id="tab-help" class="tab-content">
-<div class="card"><h2>🚀 5분 퀵스타트</h2>
+<div class="card"><h2>5분 만에 시작하기</h2>
 <table class="student-table" style="font-size:.85rem">
 <thead><tr><th>단계</th><th>할 일</th><th>소요</th></tr></thead>
 <tbody>
@@ -778,25 +808,24 @@ body.view-mode .edit-btn{display:none!important}
 <tr><td>득점자 팝업이 안 뜬다</td><td>대회설정 → 득점자 기록 체크박스 ON 확인</td></tr>
 </tbody></table></div>
 <div style="text-align:center;padding:1rem;color:var(--text-light);font-size:.82rem">
-<p>제작: 삼성여자고등학교 교사 허한덕</p>
+<p>제작: deok tt</p>
 <p>🏆 대진표 자동 생성기 Pro v4 ⓒ 2026</p>
 </div>
 </div>
 
-</div><!-- /container -->
-
 <div id="tab-dashboard" class="tab-content">
 <div class="card">
-<h2>🏠 팀 현황 대시보드</h2>
+<h2>팀 현황</h2>
 <div class="toggle-group mb-1" id="dashToggle">
-<button class="toggle-option active" onclick="switchDashSection('roster')">📋 팀 로스터</button>
-<button class="toggle-option" onclick="switchDashSection('stats')">📊 개인 기록</button>
-<button class="toggle-option" onclick="switchDashSection('cards')">🟨 경고/퇴장</button>
-<button class="toggle-option" onclick="switchDashSection('matches')">📅 경기 기록</button>
+<button class="toggle-option active" onclick="switchDashSection('roster')">팀 명단</button>
+<button class="toggle-option" onclick="switchDashSection('stats')">개인 기록</button>
+<button class="toggle-option" onclick="switchDashSection('cards')">경고 · 퇴장</button>
+<button class="toggle-option" onclick="switchDashSection('matches')">경기 기록</button>
 </div>
 </div>
 <div id="dashContent"></div>
 </div>
+</div><!-- /container -->
 
 <!-- ★ 팀 편집 모달 ★ -->
 <div class="modal-overlay" id="teamEditModal" onclick="if(event.target===this)closeTeamEdit()">
@@ -870,7 +899,7 @@ body.view-mode .edit-btn{display:none!important}
 </div>
 
 <footer class="footer">
-<div class="maker">제작: 삼성여자고등학교 교사 허한덕</div>
+<div class="maker">제작: deok tt</div>
 <div class="sub">🏆 대진표 자동 생성기 Pro v4 ⓒ 2026</div>
 </footer>
 <style>
@@ -1316,6 +1345,222 @@ body.dark-mode .schedule-seq-badge{
 }
 </style>
 
+<style>
+/* =========================================================
+   UI 개선 — 정보 위계 · 색 · 글자 크기 · 모바일 사용성
+   (기능은 건드리지 않고 화면만 바꾸는 규칙 모음)
+   ========================================================= */
+
+:root{
+  /* 실력 등급: 빨강/초록 대신 남색 계열 진하기 차이.
+     빨강은 삭제·위험 전용으로만 남긴다. */
+  --lvl-a:#1e3a8a; --lvl-a-bg:#dfe6fb;
+  --lvl-b:#4c6aa8; --lvl-b-bg:#e9eef7;
+  --lvl-c:#7c8ba3; --lvl-c-bg:#eef2f6;
+  --shadow-sm:0 1px 3px rgba(15,23,42,.07);
+  --shadow-md:0 4px 14px rgba(15,23,42,.09);
+}
+body.dark-mode{
+  --lvl-a:#a5c0ff; --lvl-a-bg:#1e2f52;
+  --lvl-b:#8ea6cc; --lvl-b-bg:#253349;
+  --lvl-c:#8b99ad; --lvl-c-bg:#222d3f;
+}
+
+/* ---------- 글자 크기 위계 ---------- */
+body{font-size:1rem;line-height:1.55}
+.header h1{font-size:1.5rem;letter-spacing:-.02em}
+.header p{font-size:.95rem}
+.card{padding:1.35rem 1.25rem}
+.card h2{font-size:1.25rem;margin-bottom:.35rem;letter-spacing:-.01em}
+.card h2+.card-sub{margin-bottom:.9rem}
+.card h3,.sub-head{font-size:1.05rem;margin:1.1rem 0 .6rem;color:var(--text)}
+.card-sub{font-size:.92rem;color:var(--text-light);margin-bottom:.9rem;line-height:1.5}
+.hint-text{font-size:.88rem;color:var(--text-light);margin-top:.4rem}
+.form-group label{font-size:.9rem;font-weight:600;color:var(--text-light);letter-spacing:.01em}
+input[type="text"],input[type="number"],input[type="date"],input[type="time"],select,textarea{font-size:1rem;padding:.65rem .8rem}
+.btn{font-size:.95rem;padding:.6rem 1.15rem;min-height:42px}
+.btn-sm{font-size:.88rem;padding:.45rem .85rem;min-height:38px}
+.toggle-option{font-size:.95rem;padding:.65rem .6rem}
+.tab-btn{font-size:.9rem}
+.info-box,.warning-box{font-size:.92rem;line-height:1.55}
+.team-tag,.condition-tag,.bye-team-tag{font-size:.92rem;padding:.4rem .8rem}
+.match-header{font-size:.8rem}
+.match-team{font-size:.95rem;padding:.45rem .6rem}
+.match-schedule{font-size:.8rem}
+.round-title{font-size:.95rem;padding:.35rem .5rem}
+.league-table,.standings-table,.student-table,.player-record-table{font-size:.95rem}
+.league-table th,.standings-table th,.student-table th,.player-record-table th{font-size:.88rem;padding:.6rem .5rem}
+.league-table td,.standings-table td,.student-table td,.player-record-table td{padding:.55rem .5rem}
+.schedule-item{font-size:.95rem}
+.schedule-match-num{font-size:.85rem}
+.schedule-status{font-size:.85rem;padding:.25rem .5rem}
+.calendar-match{font-size:.92rem;padding:.5rem .6rem}
+.calendar-match .court{font-size:.85rem}
+.calendar-day-header{font-size:1rem}
+.team-member,.roster-player{font-size:.92rem;padding:.35rem .5rem}
+.team-stat{font-size:.8rem;padding:.2rem .5rem}
+.timeline-item,.timeline-text{font-size:.9rem}
+.timeline-minute{font-size:.82rem}
+.preset-item{font-size:.92rem;padding:.65rem .85rem}
+.preset-item .preset-count{font-size:.85rem}
+.seed-badge{font-size:.78rem;padding:2px 6px}
+.sb-set-badge{font-size:.82rem;padding:.2rem .55rem}
+.sb-select{font-size:.95rem;padding:.5rem .7rem}
+.mvp-badge,.suspension-badge{font-size:.8rem}
+.roster-player-badges span{font-size:.78rem;padding:.15rem .4rem}
+.schedule-order-toolbar .hint{font-size:.88rem}
+.edit-btn{font-size:.8rem;padding:.25rem .5rem}
+.footer{font-size:.9rem}
+
+/* ---------- 실력 등급 색 (빨강/초록 제거) ---------- */
+.level-a{color:var(--lvl-a);font-weight:700}
+.level-b{color:var(--lvl-b);font-weight:700}
+.level-c{color:var(--lvl-c);font-weight:600}
+.stat-a{background:var(--lvl-a-bg);color:var(--lvl-a)}
+.stat-b{background:var(--lvl-b-bg);color:var(--lvl-b)}
+.stat-c{background:var(--lvl-c-bg);color:var(--lvl-c)}
+.btn-sm.lv-a{color:var(--lvl-a)}
+.btn-sm.lv-b{color:var(--lvl-b)}
+.btn-sm.lv-c{color:var(--lvl-c)}
+
+/* ---------- 상단 바 ---------- */
+.project-bar{padding:.6rem 1rem;gap:.45rem;font-size:.9rem}
+.pb-label{font-weight:700;color:var(--text-light);font-size:.85rem;letter-spacing:.02em}
+.pb-spacer{flex:1}
+.project-bar select{width:auto;min-width:190px;max-width:280px;padding:.45rem .7rem;font-size:.9rem}
+.save-indicator{font-size:.85rem;padding:.25rem .6rem;border-radius:99px;background:#ecfdf5;color:#047857;margin:0 .2rem}
+.save-indicator.unsaved{background:#fef2f2;color:#b91c1c;font-weight:700}
+.btn-ghost-danger{background:transparent;color:var(--danger);border:1px solid transparent}
+.btn-ghost-danger:hover{background:#fef2f2;border-color:#fecaca}
+
+/* ---------- 탭 = 작업 단계 ---------- */
+.tab-nav{gap:0;padding:0 .3rem}
+.tab-btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.85rem .5rem}
+.tab-btn.step{flex:1 1 0}
+.tab-btn.aux{flex:0 0 auto;padding:.85rem .9rem;color:var(--text-light)}
+.tab-btn .step-no{display:inline-flex;width:22px;height:22px;flex:0 0 22px;border-radius:50%;
+  background:var(--border);color:var(--text-light);font-size:.78rem;font-weight:800;
+  align-items:center;justify-content:center;transition:.2s}
+.tab-btn.active .step-no{background:var(--primary);color:#fff}
+.tab-divider{flex:0 0 1px;width:1px;background:var(--border);margin:.65rem .35rem;align-self:stretch}
+body.dark-mode .tab-btn .step-no{background:#334155;color:#94a3b8}
+body.dark-mode .tab-btn.active .step-no{background:#60a5fa;color:#0f172a}
+body.dark-mode .tab-divider{background:#334155}
+
+/* ---------- 단계 안내 문구 ---------- */
+.step-hint{font-size:.92rem;color:var(--text-light);margin:.2rem .2rem .8rem;font-weight:600}
+
+/* ---------- 필수 표시 · 선택 배지 ---------- */
+.req-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--primary);
+  margin-right:.5rem;vertical-align:middle}
+.badge-optional{display:inline-block;font-size:.75rem;font-weight:700;padding:.15rem .5rem;border-radius:99px;
+  background:var(--border);color:var(--text-light);margin-left:.4rem;vertical-align:middle}
+body.dark-mode .badge-optional{background:#334155;color:#cbd5e1}
+
+/* ---------- 접이식 세부 설정 ---------- */
+.opt-block{border:1px solid var(--border);border-radius:10px;margin-top:.7rem;background:transparent}
+.opt-block>summary{cursor:pointer;padding:.6rem .85rem;font-size:.92rem;font-weight:600;color:var(--text-light);
+  list-style:none;display:flex;align-items:center;gap:.45rem}
+.opt-block>summary::-webkit-details-marker{display:none}
+.opt-block>summary::before{content:'▸';font-size:.85rem;transition:.2s}
+.opt-block[open]>summary::before{transform:rotate(90deg)}
+.opt-block[open]>summary{border-bottom:1px solid var(--border);margin-bottom:.7rem}
+.opt-block>*:not(summary){padding:0 .85rem .85rem}
+.opt-section{margin-bottom:1rem}
+.opt-section>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:.6rem;flex-wrap:wrap;
+  padding:.85rem 1.1rem;background:var(--card);border:1px dashed var(--border);border-radius:14px}
+.opt-section>summary::-webkit-details-marker{display:none}
+.opt-section>summary::before{content:'＋';font-weight:800;color:var(--primary)}
+.opt-section[open]>summary::before{content:'－'}
+.opt-section .opt-title{font-weight:700;font-size:1rem}
+.opt-section .opt-desc{font-size:.88rem;color:var(--text-light)}
+.opt-section[open]>summary{border-style:solid;border-bottom-left-radius:0;border-bottom-right-radius:0;margin-bottom:0}
+.opt-section[open]>.card{border-top-left-radius:0;border-top-right-radius:0;margin-top:0}
+body.dark-mode .opt-block{border-color:#334155}
+body.dark-mode .opt-section>summary{background:#1e293b;border-color:#475569;color:#e2e8f0}
+
+/* ---------- 화면 아래 고정 실행 버튼 ---------- */
+.action-bar{position:sticky;bottom:0;z-index:90;display:flex;align-items:center;gap:1rem;
+  padding:.85rem 1.1rem;margin:1.2rem -1rem 0;background:var(--card);
+  border-top:1px solid var(--border);box-shadow:0 -6px 20px rgba(15,23,42,.12)}
+.action-hint{flex:1;font-size:.92rem;color:var(--text-light);line-height:1.4}
+.btn-cta{font-size:1.05rem;font-weight:700;padding:.9rem 2.2rem;border-radius:12px;min-height:54px;
+  box-shadow:0 2px 10px rgba(37,99,235,.35)}
+.btn-cta:hover{box-shadow:0 4px 16px rgba(37,99,235,.45)}
+body.dark-mode .action-bar{background:#1e293b;border-color:#334155}
+
+/* ---------- 일괄 편집 도구 · 위험 구역 ---------- */
+.bulk-tools{margin-top:.9rem;border-top:1px solid var(--border);padding-top:.8rem}
+.bulk-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-bottom:.45rem}
+.bulk-label{font-size:.85rem;font-weight:700;color:var(--text-light);min-width:68px}
+.danger-zone{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin-top:1rem;padding:.7rem .85rem;
+  border:1px solid #fecaca;border-radius:10px;background:#fff7f7}
+.dz-label{font-size:.82rem;font-weight:700;color:#b91c1c}
+body.dark-mode .danger-zone{background:#2a1414;border-color:#7f1d1d}
+body.dark-mode .dz-label{color:#fca5a5}
+body.dark-mode .bulk-tools{border-color:#334155}
+
+/* ---------- 기타 ---------- */
+.inline-link{color:var(--primary);font-weight:600;text-decoration:underline;cursor:pointer}
+.team-count-line{margin-top:.7rem;font-size:.95rem;color:var(--text-light)}
+.team-count-line strong{color:var(--text);font-size:1.05rem}
+
+/* ---------- 인쇄 ---------- */
+@media print{
+  .action-bar,.step-hint,.danger-zone,.bulk-tools{display:none!important}
+  details{display:block!important}
+  details>summary{display:none!important}
+}
+
+/* ---------- 모바일 (PC 레이아웃은 그대로) ---------- */
+@media(max-width:768px){
+  /* iOS 사파리 입력칸 자동 확대 방지: 16px 이상 */
+  input[type="text"],input[type="number"],input[type="date"],input[type="time"],select,textarea{font-size:16px}
+  .student-table select,.student-table input,.sb-select,.project-bar select{font-size:16px}
+
+  /* 손가락으로 누를 수 있는 크기 */
+  .btn{min-height:46px}
+  .btn-sm{min-height:42px;padding:.5rem .8rem}
+  .score-btn{width:58px;height:58px;font-size:1.7rem}
+  .score-controls{gap:.7rem;margin-top:.5rem}
+  .team-tag .remove,.condition-tag .remove{font-size:1.3rem;padding:0 .3rem}
+  .edit-btn{min-height:34px;padding:.3rem .6rem;font-size:.85rem}
+
+  /* 멀리서 봐야 하는 숫자는 오히려 크게 */
+  .scoreboard-team .score{font-size:3.2rem;min-width:98px;padding:.3rem .8rem}
+  .scoreboard-team .name{font-size:1.05rem}
+  .timer-display{font-size:2.6rem}
+  .scoreboard{padding:1.4rem 1rem}
+
+  /* 하단 고정 버튼은 가로 꽉 차게 */
+  .action-bar{flex-direction:column;align-items:stretch;gap:.5rem;padding:.75rem .9rem;margin:1rem -.6rem 0}
+  .action-hint{text-align:center;font-size:.88rem}
+  .btn-cta{width:100%;justify-content:center;min-height:56px;font-size:1.1rem}
+
+  /* 탭: 단계 번호는 유지하고 글자만 줄임 */
+  .tab-btn{padding:.7rem .45rem;font-size:.82rem}
+  .tab-btn.aux{padding:.7rem .6rem}
+  .tab-nav{-webkit-overflow-scrolling:touch}
+
+  /* 가로 스크롤 안내 */
+  .bracket-container{position:relative}
+  .bracket-container::before{content:'← 좌우로 밀어서 전체 보기 →';position:sticky;left:0;display:block;
+    font-size:.82rem;color:var(--text-light);padding-bottom:.4rem;font-weight:600}
+  .scroll-x-hint{font-size:.82rem;color:var(--text-light);font-weight:600;margin-bottom:.3rem}
+
+  /* 상단 대회 바를 두 줄 안에 */
+  .project-bar{padding:.5rem .55rem;gap:.3rem;font-size:.85rem}
+  .project-bar .btn-sm{min-height:36px;padding:.35rem .55rem;font-size:.82rem}
+  .project-bar select{min-width:0;flex:1 1 130px;max-width:none;font-size:16px}
+  .pb-label,.pb-spacer{display:none}
+  .project-name-display{order:9;width:100%;font-size:.85rem;margin-top:.1rem}
+  .dark-toggle{width:34px;height:34px;font-size:.95rem}
+
+  .card{padding:1.05rem .95rem}
+  .card h2{font-size:1.15rem}
+  .header h1{font-size:1.25rem}
+}
+</style>
 <script>
 /* =========================================================
    대진표 자동 생성기 — 전체 스크립트 (블록 1개)
@@ -1348,7 +1593,7 @@ function setActiveId(id){localStorage.setItem(ACTIVE_KEY,id)}
 function gv(id){const el=document.getElementById(id);return el?el.value:''}
 function sv(id,val){const el=document.getElementById(id);if(el&&val!=null)el.value=val}
 
-function autoSave(){if(!state.id)return;const p=getAllProjects();state.settings=gatherSettings();state.name=gv('tournamentName')+' - '+gv('sportName');p[state.id]={id:state.id,name:state.name,format:state.format,scoreType:state.scoreType,teams:state.teams,matches:state.matches,groups:state.groups,leagueResults:state.leagueResults,matchSchedules:state.matchSchedules,settings:state.settings,generated:state.generated,students:state.students,conditions:state.conditions,generatedTeams:state.generatedTeams,matchEvents:state.matchEvents,savedAt:new Date().toISOString()};saveAllProjects(p);setActiveId(state.id);updateProjectUI();const si=document.getElementById('saveIndicator');if(si){si.textContent='✅ 저장됨';si.className='save-indicator'}}
+function autoSave(){if(!state.id)return;const p=getAllProjects();state.settings=gatherSettings();state.name=gv('tournamentName')+' - '+gv('sportName');p[state.id]={id:state.id,name:state.name,format:state.format,scoreType:state.scoreType,teams:state.teams,matches:state.matches,groups:state.groups,leagueResults:state.leagueResults,matchSchedules:state.matchSchedules,settings:state.settings,generated:state.generated,students:state.students,conditions:state.conditions,generatedTeams:state.generatedTeams,matchEvents:state.matchEvents,savedAt:new Date().toISOString()};saveAllProjects(p);setActiveId(state.id);updateProjectUI();const si=document.getElementById('saveIndicator');if(si){si.textContent='저장됨';si.className='save-indicator'}}
 
 function newProject(){const n=prompt('새 대회 이름:','새 대회');if(!n)return;state={id:'proj_'+Date.now(),name:n,format:'tournament',scoreType:'single',teams:[],matches:[],groups:null,leagueResults:{},matchSchedules:[],settings:{},generated:false,sbScores:[0,0],currentScoreMatch:null,timerSeconds:0,timerRunning:false,scheduleView:'list',students:[],conditions:[],generatedTeams:[],matchEvents:[]};manualByeTeams=[];sv('tournamentName',n);sv('sportName','');setFormatSilent('tournament');setScoreTypeSilent('single');renderTeams();renderStudents();renderConditions();document.getElementById('bracketArea').innerHTML='';document.getElementById('scheduleArea').innerHTML='';document.getElementById('teamResultArea').innerHTML='';autoSave();refreshProjectList();switchTab('teammaker')}
 
@@ -1365,7 +1610,23 @@ function refreshProjectList(){const sel=document.getElementById('projectSelect')
 function updateProjectUI(){document.getElementById('projectNameDisplay').textContent=state.id?`📌 ${state.name}`:''}
 
 // ===================== TAB =====================
-function switchTab(t){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[data-tab="${t}"]`).classList.add('active');if(t==='scoreboard')initScoreboards();if(t==='dashboard')renderDashboard()}
+function switchTab(t){document.querySelectorAll('.tab-content').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));document.getElementById('tab-'+t).classList.add('active');document.querySelector(`[data-tab="${t}"]`).classList.add('active');window.scrollTo({top:0,behavior:'smooth'});updateActionHints();if(t==='scoreboard')initScoreboards();if(t==='dashboard')renderDashboard()}
+
+// 하단 실행 버튼 옆 안내 문구를 현재 상태에 맞게 갱신
+function updateActionHints(){
+  const t=document.getElementById('teamActionHint');
+  if(t){
+    const n=state.students.length;
+    t.textContent = n<2 ? '학생을 2명 이상 등록하면 팀을 나눌 수 있습니다'
+      : '등록된 '+n+'명을 팀당 '+(gv('teamSize')||5)+'명씩 나눕니다';
+  }
+  const b=document.getElementById('setupActionHint');
+  if(b){
+    const n=state.teams.length;
+    b.textContent = n<2 ? '참가팀을 2팀 이상 등록해 주세요'
+      : n+'팀으로 대진표와 일정을 만듭니다';
+  }
+}
 
 // ===================== FORMAT =====================
 function setFormat(f){state.format=f;document.querySelectorAll('#formatToggle .toggle-option').forEach(b=>b.classList.remove('active'));event.target.classList.add('active');applyFmtVis(f);autoSave()}
@@ -1425,7 +1686,7 @@ function setAllLevel(lv){state.students.forEach(s=>s.level=lv);renderStudents();
 function changeGender(idx,g){state.students[idx].gender=g;renderStudents();autoSave()}
 function changeLevel(idx,lv){state.students[idx].level=lv;renderStudents();autoSave()}
 
-function renderStudents(){const tbody=document.getElementById('studentTableBody');tbody.innerHTML=state.students.map((s,i)=>{const lvl=s.level||'X';return`<tr><td>${s.num}</td><td class="name-cell">${s.name}</td><td><select onchange="changeGender(${i},this.value)" style="font-size:.78rem;padding:.2rem"><option value="M" ${s.gender==='M'?'selected':''}>남</option><option value="F" ${s.gender==='F'?'selected':''}>여</option><option value="X" ${s.gender==='X'?'selected':''}>-</option></select></td><td><select onchange="changeLevel(${i},this.value)" style="font-size:.78rem;padding:.2rem"><option value="X" ${lvl==='X'?'selected':''}>-</option><option value="A" ${lvl==='A'?'selected':''}>상</option><option value="B" ${lvl==='B'?'selected':''}>중</option><option value="C" ${lvl==='C'?'selected':''}>하</option></select></td><td><span style="cursor:pointer;color:var(--danger);font-weight:700" onclick="removeStudent(${i})">×</span></td></tr>`}).join('');const m=state.students.filter(s=>s.gender==='M').length,f=state.students.filter(s=>s.gender==='F').length,x=state.students.filter(s=>s.gender==='X').length;const la=state.students.filter(s=>s.level==='A').length,lb=state.students.filter(s=>s.level==='B').length,lc=state.students.filter(s=>s.level==='C').length;document.getElementById('studentTotal').textContent=state.students.length;document.getElementById('studentM').textContent=m;document.getElementById('studentF').textContent=f;document.getElementById('studentX').textContent=x;document.getElementById('studentA').textContent=la;document.getElementById('studentB').textContent=lb;document.getElementById('studentC').textContent=lc}
+function renderStudents(){const tbody=document.getElementById('studentTableBody');tbody.innerHTML=state.students.map((s,i)=>{const lvl=s.level||'X';return`<tr><td>${s.num}</td><td class="name-cell">${s.name}</td><td><select onchange="changeGender(${i},this.value)" style="font-size:.78rem;padding:.2rem"><option value="M" ${s.gender==='M'?'selected':''}>남</option><option value="F" ${s.gender==='F'?'selected':''}>여</option><option value="X" ${s.gender==='X'?'selected':''}>-</option></select></td><td><select onchange="changeLevel(${i},this.value)" style="font-size:.78rem;padding:.2rem"><option value="X" ${lvl==='X'?'selected':''}>-</option><option value="A" ${lvl==='A'?'selected':''}>상</option><option value="B" ${lvl==='B'?'selected':''}>중</option><option value="C" ${lvl==='C'?'selected':''}>하</option></select></td><td><span style="cursor:pointer;color:var(--danger);font-weight:700" onclick="removeStudent(${i})">×</span></td></tr>`}).join('');const m=state.students.filter(s=>s.gender==='M').length,f=state.students.filter(s=>s.gender==='F').length,x=state.students.filter(s=>s.gender==='X').length;const la=state.students.filter(s=>s.level==='A').length,lb=state.students.filter(s=>s.level==='B').length,lc=state.students.filter(s=>s.level==='C').length;document.getElementById('studentTotal').textContent=state.students.length;document.getElementById('studentM').textContent=m;document.getElementById('studentF').textContent=f;document.getElementById('studentX').textContent=x;document.getElementById('studentA').textContent=la;document.getElementById('studentB').textContent=lb;document.getElementById('studentC').textContent=lc;updateActionHints()}
 
 // ===================== CONDITIONS =====================
 function updateConditionSelects(){const opts=state.students.map(s=>`<option value="${s.name}">${s.num}. ${s.name}</option>`).join('');document.getElementById('cond1').innerHTML='<option value="">선택</option>'+opts;document.getElementById('cond2').innerHTML='<option value="">선택</option>'+opts}
@@ -1436,7 +1697,7 @@ function renderConditions(){document.getElementById('conditionList').innerHTML=s
 // ===================== TEAM GENERATION =====================
 function generateTeams(){if(state.students.length<2){alert('최소 2명 이상 등록하세요!');return}if(!state.id){state.id='proj_'+Date.now();state.name=gv('tournamentName')+' - '+gv('sportName')}const size=parseInt(gv('teamSize'))||5;const genderBal=gv('genderBalance')==='balance';const levelBal=gv('levelBalance')==='balance';const prefix=gv('teamPrefix')||'팀';let students=[...state.students];function shuffleArr(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr}shuffleArr(students);let teamCount=Math.floor(students.length/size);if(teamCount<1)teamCount=1;const maxPerTeam=Math.ceil(students.length/teamCount);let teams=Array.from({length:teamCount},()=>[]);const levelScore={A:3,B:2,C:1,X:2};function getScore(s){return levelScore[s.level||'X']||2}function teamTotalScore(team){return team.reduce((sum,s)=>sum+getScore(s),0)}function teamGenderCount(team,g){return team.filter(s=>s.gender===g).length}let pool=[...students];if(levelBal){pool.sort((a,b)=>getScore(b)-getScore(a));if(genderBal){const males=shuffleArr(students.filter(s=>s.gender==='M'));const females=shuffleArr(students.filter(s=>s.gender==='F'));const others=shuffleArr(students.filter(s=>s.gender==='X'));males.sort((a,b)=>getScore(b)-getScore(a));females.sort((a,b)=>getScore(b)-getScore(a));others.sort((a,b)=>getScore(b)-getScore(a));pool=[];const maxLen=Math.max(males.length,females.length,others.length);for(let i=0;i<maxLen;i++){if(i<males.length)pool.push(males[i]);if(i<females.length)pool.push(females[i]);if(i<others.length)pool.push(others[i])}}teams=Array.from({length:teamCount},()=>[]);pool.forEach(s=>{let bestTeam=-1;let bestPenalty=Infinity;for(let t=0;t<teamCount;t++){if(teams[t].length>=maxPerTeam)continue;const newScore=teamTotalScore(teams[t])+getScore(s);const avgTarget=(students.reduce((sum,st)=>sum+getScore(st),0))/teamCount;let penalty=Math.abs(newScore-avgTarget*(teams[t].length+1)/maxPerTeam);penalty+=teams[t].length*10;if(genderBal){const gc=teamGenderCount(teams[t],s.gender);penalty+=gc*5}if(penalty<bestPenalty){bestPenalty=penalty;bestTeam=t}}if(bestTeam===-1)bestTeam=0;teams[bestTeam].push(s)})}else if(genderBal){const males=shuffleArr(students.filter(s=>s.gender==='M'));const females=shuffleArr(students.filter(s=>s.gender==='F'));const others=shuffleArr(students.filter(s=>s.gender==='X'));pool=[];const maxLen=Math.max(males.length,females.length,others.length);for(let i=0;i<maxLen;i++){if(i<males.length)pool.push(males[i]);if(i<females.length)pool.push(females[i]);if(i<others.length)pool.push(others[i])}let tidx=0,dir=1;pool.forEach(s=>{teams[tidx].push(s);tidx+=dir;if(tidx>=teamCount){tidx=teamCount-1;dir=-1}else if(tidx<0){tidx=0;dir=1}})}else{let tidx=0,dir=1;students.forEach(s=>{teams[tidx].push(s);tidx+=dir;if(tidx>=teamCount){tidx=teamCount-1;dir=-1}else if(tidx<0){tidx=0;dir=1}})}if(levelBal&&teamCount>=2){for(let iter=0;iter<200;iter++){let improved=false;for(let t1=0;t1<teamCount;t1++){for(let t2=t1+1;t2<teamCount;t2++){const score1=teamTotalScore(teams[t1]);const score2=teamTotalScore(teams[t2]);const diff=Math.abs(score1-score2);if(diff<=1)continue;for(let i=0;i<teams[t1].length;i++){for(let j=0;j<teams[t2].length;j++){const s1=teams[t1][i],s2=teams[t2][j];const newScore1=score1-getScore(s1)+getScore(s2);const newScore2=score2-getScore(s2)+getScore(s1);const newDiff=Math.abs(newScore1-newScore2);if(newDiff<diff){if(genderBal&&s1.gender!==s2.gender)continue;[teams[t1][i],teams[t2][j]]=[teams[t2][j],teams[t1][i]];improved=true;break}}if(improved)break}if(improved)break}if(improved)break}if(!improved)break}}let attempts=0;const maxAttempts=500;let valid=false;while(attempts<maxAttempts){valid=true;for(const c of state.conditions.filter(x=>x.type==='block')){const t1=teams.findIndex(t=>t.find(s=>s.name===c.s1));const t2=teams.findIndex(t=>t.find(s=>s.name===c.s2));if(t1===t2&&t1>=0){valid=false;const otherTeams=teams.map((_,i)=>i).filter(i=>i!==t1);for(const ot of otherTeams){const s2idx=teams[t1].findIndex(s=>s.name===c.s2);const swapIdx=Math.floor(Math.random()*teams[ot].length);[teams[t1][s2idx],teams[ot][swapIdx]]=[teams[ot][swapIdx],teams[t1][s2idx]];break}break}}for(const c of state.conditions.filter(x=>x.type==='must')){const t1=teams.findIndex(t=>t.find(s=>s.name===c.s1));const t2=teams.findIndex(t=>t.find(s=>s.name===c.s2));if(t1!==t2&&t1>=0&&t2>=0){valid=false;const s2idx=teams[t2].findIndex(s=>s.name===c.s2);const swapCandidates=teams[t1].filter(s=>s.name!==c.s1);if(swapCandidates.length){const sc=swapCandidates[Math.floor(Math.random()*swapCandidates.length)];const scIdx=teams[t1].findIndex(s=>s.name===sc.name);[teams[t1][scIdx],teams[t2][s2idx]]=[teams[t2][s2idx],teams[t1][scIdx]]}break}}if(valid)break;attempts++}if(!valid){const failed=[];state.conditions.forEach(c=>{const t1=teams.findIndex(t=>t.find(s=>s.name===c.s1));const t2=teams.findIndex(t=>t.find(s=>s.name===c.s2));if(c.type==='block'&&t1===t2&&t1>=0)failed.push('🚫 '+c.s1+'↔'+c.s2+' 분리 실패');if(c.type==='must'&&t1!==t2)failed.push('✅ '+c.s1+'↔'+c.s2+' 합류 실패')});if(failed.length)alert('⚠️ 일부 조건 충족 실패:\n'+failed.join('\n'))}state.generatedTeams=teams.map((members,i)=>({name:prefix+' '+(i+1),members}));renderTeamResults();autoSave()}
 
-function renderTeamResults(){const area=document.getElementById('teamResultArea');const displayMode=gv('teamDisplayMode');if(!state.generatedTeams.length){area.innerHTML='';return}let h=`<div class="card fade-in"><h2>🎉 팀 편성 결과 (${state.generatedTeams.length}팀)</h2><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="generateTeams()">🔀 다시 섞기</button><button class="btn btn-success" onclick="sendTeamsToBracket()">📤 대진표로 보내기</button><button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 인쇄</button></div><div class="team-result-grid">`;state.generatedTeams.forEach(t=>{const mc=t.members.filter(s=>s.gender==='M').length,fc=t.members.filter(s=>s.gender==='F').length;const la=t.members.filter(s=>(s.level||'X')==='A').length,lb=t.members.filter(s=>(s.level||'X')==='B').length,lc=t.members.filter(s=>(s.level||'X')==='C').length;h+=`<div class="team-result-card"><div class="team-result-header"><span>${t.name}</span><span>${t.members.length}명</span></div><div class="team-result-body">`;t.members.forEach(s=>{const gCls=s.gender==='M'?'gender-m':s.gender==='F'?'gender-f':'gender-x';const gLabel=s.gender==='M'?'♂':s.gender==='F'?'♀':'-';const lvl=s.level||'X';const lCls=lvl==='A'?'level-a':lvl==='B'?'level-b':lvl==='C'?'level-c':'level-x';const lLabel=lvl==='A'?'상':lvl==='B'?'중':lvl==='C'?'하':'';let display='';if(displayMode==='name')display=s.name;else if(displayMode==='number')display=`${s.num}번`;else display=`${s.num}. ${s.name}`;h+=`<div class="team-member"><span>${display}</span><span><span class="${gCls}" style="margin-right:.3rem">${gLabel}</span>${lLabel?`<span class="${lCls}">${lLabel}</span>`:''}</span></div>`});h+=`<div class="team-stats">`;if(mc)h+=`<span class="team-stat stat-m">♂ ${mc}</span>`;if(fc)h+=`<span class="team-stat stat-f">♀ ${fc}</span>`;if(la)h+=`<span class="team-stat stat-a">상 ${la}</span>`;if(lb)h+=`<span class="team-stat stat-b">중 ${lb}</span>`;if(lc)h+=`<span class="team-stat stat-c">하 ${lc}</span>`;h+=`<span class="team-stat stat-total">합계 ${t.members.length}</span></div></div></div>`});h+=`</div></div>`;area.innerHTML=h}
+function renderTeamResults(){const area=document.getElementById('teamResultArea');const displayMode=gv('teamDisplayMode');if(!state.generatedTeams.length){area.innerHTML='';return}let h=`<div class="card fade-in"><h2>팀 편성 결과 <span class="badge-optional">${state.generatedTeams.length}팀</span></h2><div class="btn-group"><button class="btn btn-warning btn-sm" onclick="generateTeams()">🔀 다시 섞기</button><button class="btn btn-success" onclick="sendTeamsToBracket()">📤 대진표로 보내기</button><button class="btn btn-primary btn-sm" onclick="window.print()">🖨️ 인쇄</button></div><div class="team-result-grid">`;state.generatedTeams.forEach(t=>{const mc=t.members.filter(s=>s.gender==='M').length,fc=t.members.filter(s=>s.gender==='F').length;const la=t.members.filter(s=>(s.level||'X')==='A').length,lb=t.members.filter(s=>(s.level||'X')==='B').length,lc=t.members.filter(s=>(s.level||'X')==='C').length;h+=`<div class="team-result-card"><div class="team-result-header"><span>${t.name}</span><span>${t.members.length}명</span></div><div class="team-result-body">`;t.members.forEach(s=>{const gCls=s.gender==='M'?'gender-m':s.gender==='F'?'gender-f':'gender-x';const gLabel=s.gender==='M'?'♂':s.gender==='F'?'♀':'-';const lvl=s.level||'X';const lCls=lvl==='A'?'level-a':lvl==='B'?'level-b':lvl==='C'?'level-c':'level-x';const lLabel=lvl==='A'?'상':lvl==='B'?'중':lvl==='C'?'하':'';let display='';if(displayMode==='name')display=s.name;else if(displayMode==='number')display=`${s.num}번`;else display=`${s.num}. ${s.name}`;h+=`<div class="team-member"><span>${display}</span><span><span class="${gCls}" style="margin-right:.3rem">${gLabel}</span>${lLabel?`<span class="${lCls}">${lLabel}</span>`:''}</span></div>`});h+=`<div class="team-stats">`;if(mc)h+=`<span class="team-stat stat-m">♂ ${mc}</span>`;if(fc)h+=`<span class="team-stat stat-f">♀ ${fc}</span>`;if(la)h+=`<span class="team-stat stat-a">상 ${la}</span>`;if(lb)h+=`<span class="team-stat stat-b">중 ${lb}</span>`;if(lc)h+=`<span class="team-stat stat-c">하 ${lc}</span>`;h+=`<span class="team-stat stat-total">합계 ${t.members.length}</span></div></div></div>`});h+=`</div></div>`;area.innerHTML=h}
 
 function sendTeamsToBracket(){if(!state.generatedTeams.length){alert('먼저 팀을 편성하세요!');return}state.teams=state.generatedTeams.map(t=>({name:t.name,seed:0,members:t.members}));renderTeams();autoSave();switchTab('setup');alert(`✅ ${state.teams.length}개 팀이 대진표에 등록되었습니다!`)}
 
@@ -1448,7 +1709,7 @@ function removeTeam(i){state.teams.splice(i,1);renderTeams();autoSave()}
 function clearTeams(){if(state.teams.length&&!confirm('전체 삭제?'))return;state.teams=[];renderTeams();autoSave()}
 function shuffleTeams(){for(let i=state.teams.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[state.teams[i],state.teams[j]]=[state.teams[j],state.teams[i]]}renderTeams();autoSave();const tl=document.getElementById('teamList');if(tl){tl.classList.add('shuffle-anim');setTimeout(()=>tl.classList.remove('shuffle-anim'),600)}}
 function toggleSeed(i){const max=parseInt(gv('seedCount'))||0;if(!max){alert('시드 설정을 먼저!');return}const cur=state.teams.filter(t=>t.seed>0).length;if(state.teams[i].seed>0)state.teams[i].seed=0;else{if(cur>=max){alert(`최대 ${max}시드`);return}state.teams[i].seed=cur+1}renderTeams();autoSave()}
-function renderTeams(){document.getElementById('teamList').innerHTML=state.teams.map((t,i)=>`<span class="team-tag">${t.seed?`<span class="seed-badge">S${t.seed}</span>`:''}<span onclick="toggleSeed(${i})" style="cursor:pointer" title="시드">${t.name}</span><span class="remove" onclick="removeTeam(${i})">×</span></span>`).join('');document.getElementById('teamCount').textContent=state.teams.length;updateByeUI()}
+function renderTeams(){document.getElementById('teamList').innerHTML=state.teams.map((t,i)=>`<span class="team-tag">${t.seed?`<span class="seed-badge">S${t.seed}</span>`:''}<span onclick="toggleSeed(${i})" style="cursor:pointer" title="시드">${t.name}</span><span class="remove" onclick="removeTeam(${i})">×</span></span>`).join('');document.getElementById('teamCount').textContent=state.teams.length;updateByeUI();updateActionHints()}
 
 // ===================== GENERATE BRACKET =====================
 function generateBracket(){if(state.teams.length<2){alert('최소 2팀!');return}if(!state.id){state.id='proj_'+Date.now();state.name=gv('tournamentName')+' - '+gv('sportName')}state.generated=true;state.matches=[];state.leagueResults={};if(state.format==='tournament')generateTournament();else if(state.format==='league')generateLeague();else generateGroupStage();generateSchedule();populateScoreboardSelects();autoSave();refreshProjectList();switchTab('bracket')}
@@ -1497,7 +1758,7 @@ function buildTMatches(slots,ts){const rounds=Math.log2(ts);let id=1,cur=[];for(
 function renderTournamentFromState(){
 const ts=nextPow2(state.teams.length);const rounds=Math.log2(ts);const area=document.getElementById('bracketArea');
 const rn=[];for(let r=0;r<rounds;r++){if(r===rounds-1)rn.push('결승');else if(r===rounds-2)rn.push('준결승');else if(rounds-r-1===3)rn.push('8강');else if(rounds-r-1===4)rn.push('16강');else rn.push(`${r+1}라운드`)}
-let h=`<div class="card"><h2>🏆 ${gv('tournamentName')} - ${gv('sportName')} (토너먼트)</h2>`;
+let h=`<div class="card"><h2>${gv('tournamentName')} · ${gv('sportName')} <span class="badge-optional">토너먼트</span></h2>`;
 if(state.matchSchedules.length>0){
 h+=`<div class="round-schedule-bar">`;
 for(let r=0;r<rounds;r++){
@@ -1522,7 +1783,7 @@ function updateSetSummary(){const sets=getSetCount();let w1=0,w2=0;for(let i=0;i
 function closeScoreModal(){document.getElementById('scoreModal').classList.remove('show');curMM=null}
 
 // ===================== LEAGUE =====================
-function filterLeagueRound(r){document.querySelectorAll('#leagueRoundToggle .toggle-option').forEach((b,i)=>b.classList.toggle('active',i===r));const title=document.getElementById('leagueMatchListTitle');const list=document.getElementById('leagueMatchList');const filtered=r===0?state.matches:state.matches.filter(m=>m.leagueRound===r);if(title)title.textContent=`📅 경기 목록 (${r===0?'전체':r+'라운드'} ${filtered.length}경기)`;if(list)list.innerHTML=renderLeagueMatchList(r)}
+function filterLeagueRound(r){document.querySelectorAll('#leagueRoundToggle .toggle-option').forEach((b,i)=>b.classList.toggle('active',i===r));const title=document.getElementById('leagueMatchListTitle');const list=document.getElementById('leagueMatchList');const filtered=r===0?state.matches:state.matches.filter(m=>m.leagueRound===r);if(title)title.textContent=`경기 목록 (${r===0?'전체':r+'라운드'} ${filtered.length}경기)`;if(list)list.innerHTML=renderLeagueMatchList(r)}
 
 function renderST(teams){const wp=parseInt(gv('winPoints'))||3,dp=parseInt(gv('drawPoints'))||1,lp=parseInt(gv('losePoints'))||0;let st=teams.map(t=>({n:t,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0}));state.matches.forEach(m=>{if(m.score1===null)return;const a=st.find(s=>s.n===m.team1),b=st.find(s=>s.n===m.team2);if(!a||!b)return;a.p++;b.p++;a.gf+=m.score1;a.ga+=m.score2;b.gf+=m.score2;b.ga+=m.score1;if(m.score1>m.score2){a.w++;b.l++;a.pts+=wp;b.pts+=lp}else if(m.score1<m.score2){b.w++;a.l++;b.pts+=wp;a.pts+=lp}else{a.d++;b.d++;a.pts+=dp;b.pts+=dp}});st.sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);let h=`<div style="overflow-x:auto"><table class="standings-table"><thead><tr><th>순위</th><th>팀</th><th>경기</th><th>승</th><th>무</th><th>패</th><th>득</th><th>실</th><th>득실</th><th>승점</th></tr></thead><tbody>`;st.forEach((s,i)=>{const rc=i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';const md=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';h+=`<tr class="${rc}"><td>${i+1}</td><td style="text-align:left;font-weight:600">${md}${s.n}</td><td>${s.p}</td><td>${s.w}</td><td>${s.d}</td><td>${s.l}</td><td>${s.gf}</td><td>${s.ga}</td><td>${s.gf-s.ga}</td><td><strong>${s.pts}</strong></td></tr>`});h+=`</tbody></table></div>`;return h}
 
@@ -1811,7 +2072,7 @@ const arr=Object.values(stats);
 const scorers=[...arr].filter(s=>s.goals>0).sort((a,b)=>b.goals-a.goals||b.assists-a.assists);
 const assisters=[...arr].filter(s=>s.assists>0).sort((a,b)=>b.assists-a.assists);
 const mvps=[...arr].filter(s=>s.mvp>0).sort((a,b)=>b.mvp-a.mvp);
-let h='<div class="card"><h3>⚽ 득점 순위</h3>';
+let h='<div class="card"><h3>득점 순위</h3>';
 if(scorers.length===0)h+='<div class="info-box">아직 득점 기록이 없습니다. 스코어보드에서 경기 진행 시 득점 선수를 기록하세요!</div>';
 else{
 h+='<div style="overflow-x:auto"><table class="player-record-table"><thead><tr><th>순위</th><th>선수</th><th>팀</th><th>득점</th><th>도움</th><th>출장</th></tr></thead><tbody>';
@@ -1820,14 +2081,14 @@ const medal=i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':'';
 h+=`<tr><td>${medal}${i+1}</td><td style="text-align:left;font-weight:600">${s.name}</td><td>${s.team}</td><td><strong>${s.goals}</strong></td><td>${s.assists}</td><td>${s.games}</td></tr>`});
 h+='</tbody></table></div>'}
 h+='</div>';
-h+='<div class="card"><h3>🅰️ 도움 순위</h3>';
+h+='<div class="card"><h3>도움 순위</h3>';
 if(assisters.length===0)h+='<div class="info-box">아직 도움 기록이 없습니다.</div>';
 else{
 h+='<div style="overflow-x:auto"><table class="player-record-table"><thead><tr><th>순위</th><th>선수</th><th>팀</th><th>도움</th><th>득점</th></tr></thead><tbody>';
 assisters.forEach((s,i)=>{h+=`<tr><td>${i+1}</td><td style="text-align:left;font-weight:600">${s.name}</td><td>${s.team}</td><td><strong>${s.assists}</strong></td><td>${s.goals}</td></tr>`});
 h+='</tbody></table></div>'}
 h+='</div>';
-h+='<div class="card"><h3>⭐ MVP 선정 횟수</h3>';
+h+='<div class="card"><h3>MVP 선정 횟수</h3>';
 if(mvps.length===0)h+='<div class="info-box">아직 MVP 기록이 없습니다. 스코어보드에서 결과 확정 후 MVP를 선정할 수 있어요!</div>';
 else{
 h+='<div style="overflow-x:auto"><table class="player-record-table"><thead><tr><th>순위</th><th>선수</th><th>팀</th><th>MVP 횟수</th><th>득점</th></tr></thead><tbody>';
@@ -1842,7 +2103,7 @@ const stats=getPlayerStats();
 const arr=Object.values(stats);
 const warned=[...arr].filter(s=>s.warnings>0||s.redCards>0).sort((a,b)=>(b.redCards*10+b.warnings)-(a.redCards*10+a.warnings));
 const suspensionLimit=3;
-let h='<div class="card"><h3>🟨🟥 경고/퇴장 누적 현황</h3>';
+let h='<div class="card"><h3>경고 · 퇴장 누적</h3>';
 h+=`<div class="info-box">경고 ${suspensionLimit}회 누적 시 ⚠️ 주의 선수로 표시됩니다.</div>`;
 if(warned.length===0)h+='<div class="info-box">아직 경고/퇴장 기록이 없습니다.</div>';
 else{
@@ -1921,7 +2182,7 @@ function captureAndSave(element){var wasDark=document.body.classList.contains('d
 // ===================== QR CODE =====================
 function showQRCode(){if(!state.generated){alert('대진표를 먼저 생성하세요!');return}document.getElementById('qrModal').classList.add('show');var data=generateQRData();drawSimpleQR(data)}
 
-function generateQRData(){var url=window.location.href;if(url.startsWith('file://')){url=gv('tournamentName')+' - '+gv('sportName')+'\n참가: '+state.teams.length+'팀\n\n제작: 삼성여자고등학교 허한덕 교사'}else{url=url.split('?')[0]+'?view=true'}return url}
+function generateQRData(){var url=window.location.href;if(url.startsWith('file://')){url=gv('tournamentName')+' - '+gv('sportName')+'\n참가: '+state.teams.length+'팀\n\n제작: deok tt'}else{url=url.split('?')[0]+'?view=true'}return url}
 
 function drawSimpleQR(data){var canvas=document.getElementById('qrCanvas');var ctx=canvas.getContext('2d');var script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js';script.onload=function(){QRCode.toCanvas(canvas,data,{width:250,margin:2,color:{dark:'#1e293b',light:'#ffffff'}},function(error){if(error)drawTextFallback(ctx,canvas)});document.getElementById('qrInfo').innerHTML='<strong>'+gv('tournamentName')+' - '+gv('sportName')+'</strong><br><span style="font-size:.75rem">'+state.teams.length+'팀 | '+state.matchSchedules.length+'경기</span>'};script.onerror=function(){canvas.width=280;canvas.height=280;drawTextFallback(ctx,canvas)};document.head.appendChild(script)}
 
@@ -2351,7 +2612,7 @@ function renderLeague(){
   const t=state.teams.map(x=>x.name);
   const rounds=parseInt(gv('leagueRounds'))||1;
 
-  let h=`<div class="card"><h2>📊 ${gv('tournamentName')} - ${gv('sportName')} (리그전 ${rounds>1?rounds+'라운드':''})</h2>`;
+  let h=`<div class="card"><h2>${gv('tournamentName')} · ${gv('sportName')} <span class="badge-optional">리그전${rounds>1?' '+rounds+'라운드':''}</span></h2>`;
 
   if(rounds>1){
     h+=`<div class="toggle-group mb-1" id="leagueRoundToggle"><button class="toggle-option active" onclick="filterLeagueRound(0)">전체</button>`;
@@ -2359,7 +2620,7 @@ function renderLeague(){
     h+=`</div>`;
   }
 
-  h+=`<h3>📋 대전표</h3><div style="overflow-x:auto"><table class="league-table"><thead><tr><th>#</th><th>팀</th>`;
+  h+=`<h3>맞대결 표</h3><div style="overflow-x:auto"><table class="league-table"><thead><tr><th>#</th><th>팀</th>`;
 
   t.forEach((_,i)=>h+=`<th>${i+1}</th>`);
   h+=`</tr></thead><tbody>`;
@@ -2397,8 +2658,8 @@ function renderLeague(){
   });
 
   h+=`</tbody></table></div>`;
-  h+=`<h3>🏆 순위표</h3>${renderST(t)}`;
-  h+=`<h3 id="leagueMatchListTitle">📅 경기 목록 (전체 ${state.matches.length}경기)</h3><div id="leagueMatchList">${renderLeagueMatchList(0)}</div></div>`;
+  h+=`<h3>순위표</h3>${renderST(t)}`;
+  h+=`<h3 id="leagueMatchListTitle">경기 목록 <span class="badge-optional">전체 ${state.matches.length}경기</span></h3><div id="leagueMatchList">${renderLeagueMatchList(0)}</div></div>`;
 
   area.innerHTML=h;
 }
@@ -2420,7 +2681,7 @@ function renderLeagueMatchList(filterRound){
     h+=`<div class="schedule-item" onclick="openScoreModal(${m.id})" style="cursor:pointer">
       <div class="schedule-match-num">경기 ${m.id}<br><span style="font-size:.65rem;opacity:.8">R${m.leagueRound}</span></div>
       <div>${teamLabelHTML(m.team1)} <span class="schedule-vs">VS</span> ${teamLabelHTML(m.team2)}${d?`<br><span style="color:var(--success)">${scoreText}</span>`:''}</div>
-      <div style="font-size:.75rem">${sc?`📅${fmtD(sc.date)}<br>⏰${sc.time}`:''}</div>
+      <div style="font-size:.88rem">${sc?`${fmtD(sc.date)}<br><strong>${sc.time}</strong>`:''}</div>
       <div class="schedule-status status-${d?'done':'pending'}">${d?'완료':'대기'}</div>
     </div>`;
   });
@@ -2439,8 +2700,8 @@ function renderGroupStage(){
     return;
   }
 
-  let h=`<div class="card"><h2>🏅 ${gv('tournamentName')} - ${gv('sportName')} (조별+토너먼트)</h2></div>`;
-  h+=`<div class="card"><h3>📊 조별 리그</h3><div class="group-container">`;
+  let h=`<div class="card"><h2>${gv('tournamentName')} · ${gv('sportName')} <span class="badge-optional">조별 + 토너먼트</span></h2></div>`;
+  h+=`<div class="card"><h3>조별 리그</h3><div class="group-container">`;
 
   groups.forEach((g,gi)=>{
     const st=getGroupStandings(gi);
@@ -2476,7 +2737,7 @@ function renderGroupStage(){
 
   const allD=isGroupStageComplete();
 
-  h+=`<div class="card"><h3>🏆 본선</h3>`;
+  h+=`<div class="card"><h3>본선</h3>`;
 
   if(allD){
     ensureGroupKnockout();
@@ -3342,14 +3603,14 @@ function applyCurrentOrderToTimes(ev){
 /* ---------- 일정 리스트 화면 ---------- */
 function renderSL(area){
   let h = `<div class="card">
-    <h3>📋 일정</h3>
+    <h3>경기 일정</h3>
     <div class="schedule-order-toolbar no-print">
       <button class="btn ${scheduleReorderMode?'btn-warning':'btn-secondary'} btn-sm" onclick="toggleScheduleReorderMode()">
-        ${scheduleReorderMode?'🔒 순서 편집 종료':'🔀 순서 편집'}
+        ${scheduleReorderMode?'순서 편집 끝내기':'경기 순서 바꾸기'}
       </button>
-      <button class="btn btn-success btn-sm" onclick="applyCurrentOrderToTimes(event)">⏱ 현재 순서대로 시간 재배정</button>
-      <button class="btn btn-secondary btn-sm" onclick="sortScheduleByMatchId(event)"># 경기번호 순 정렬</button>
-      <span class="hint">순서 편집을 켜면 ↑↓ 버튼 또는 드래그로 경기 순서를 바꿀 수 있습니다.</span>
+      <button class="btn btn-secondary btn-sm" onclick="applyCurrentOrderToTimes(event)">이 순서대로 시간 다시 배정</button>
+      <button class="btn btn-secondary btn-sm" onclick="sortScheduleByMatchId(event)">경기 번호순으로</button>
+      <span class="hint">순서 편집을 켜면 ↑↓ 버튼으로 경기 순서를 바꿀 수 있습니다.</span>
     </div>
     <div class="schedule-list">`;
 
@@ -3388,10 +3649,10 @@ function renderSL(area){
         ${d?`<br><span style="color:var(--success)">${m.score1}:${m.score2}</span>`:''}
       </div>
 
-      <div style="font-size:.75rem">
-        📅 ${fmtD(s.date)}<br>
-        ⏰ ${s.time}<br>
-        📍 ${s.court}<br>
+      <div style="font-size:.88rem;line-height:1.6">
+        ${fmtD(s.date)}<br>
+        <strong>${s.time}</strong><br>
+        ${s.court}<br>
         <button class="edit-btn" onclick="openScheduleEdit(${idx});event.stopPropagation()">✏️</button>
       </div>
 
@@ -3406,7 +3667,7 @@ function renderSL(area){
   const dates=[...new Set(state.matchSchedules.map(s=>s.date))].sort();
 
   h += `<div class="card">
-    <h3>📊 요약</h3>
+    <h3>요약</h3>
     <div class="form-row">
       <div class="info-box">총: <strong>${tot}</strong>경기</div>
       <div class="info-box">완료: <strong>${dn}</strong></div>
@@ -3859,7 +4120,6 @@ function sbEvent(ci,eventType){
   }
 }
 </script>
-<button class="dark-toggle no-print" onclick="toggleDarkMode()" id="darkToggleBtn" title="다크모드">🌙</button>
 </body>
 </html>
 

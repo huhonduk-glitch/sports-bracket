@@ -1,8 +1,8 @@
 {
   "name": "SPORTS BRACKET",
   "slug": "sports-bracket",
-  "tagline": "학교 체육대회 대진표 생성",
-  "story": "확인필요",
+  "tagline": "명단만 넣으면 팀 편성부터 대진표·일정·점수까지",
+  "story": "학생 명단을 넣으면 팀을 자동으로 나누고, 대회 방식과 날짜를 고르면 대진표와 경기 일정이 만들어지는 대진표 생성기입니다. 경기 결과 점수를 입력하면 팀 현황까지 이어서 볼 수 있습니다.",
   "target": [
     "교사"
   ],
@@ -11,11 +11,13 @@
   ],
   "status": "운영 중",
   "public": true,
-  "appUrl": "확인필요",
+  "appUrl": "https://sports-bracket.netlify.app",
   "videoUrl": "확인필요",
   "preview": "images/preview.gif",
   "useCases": [
-    "확인필요"
+    "체육대회 리그전·토너먼트 대진표를 만들 때",
+    "학생 명단으로 팀을 자동 편성할 때",
+    "경기 점수를 입력하고 팀 현황을 볼 때"
   ],
   "lesson": "",
   "order": 4

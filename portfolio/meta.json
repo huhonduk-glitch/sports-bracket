@@ -1,0 +1,22 @@
+{
+  "name": "SPORTS BRACKET",
+  "slug": "sports-bracket",
+  "tagline": "학교 체육대회 대진표 생성",
+  "story": "확인필요",
+  "target": [
+    "교사"
+  ],
+  "tags": [
+    "행사"
+  ],
+  "status": "운영 중",
+  "public": true,
+  "appUrl": "확인필요",
+  "videoUrl": "확인필요",
+  "preview": "images/preview.gif",
+  "useCases": [
+    "확인필요"
+  ],
+  "lesson": "",
+  "order": 4
+}
